@@ -1,2 +1,2 @@
-# time_varying_density
+# Tme-varying density functions
 This repo is used to develop code for time-varying density functions
