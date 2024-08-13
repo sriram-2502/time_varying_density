@@ -31,6 +31,7 @@ x_euler = x_temp + deltaT*x_dot;
 %% wrap theta
 theta = x_euler(3);
 if theta > pi
+    disp('wrap')
     j = 1;
     while theta/pi > (2*j) + 1
         j = j+1;
@@ -38,6 +39,7 @@ if theta > pi
     theta = theta - j*(2*pi);
 end
 if theta < -pi
+    disp('wrap')
     j = 1;
     while theta/(-pi) > (2*j) + 1
         j = j+1;

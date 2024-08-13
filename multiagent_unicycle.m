@@ -52,12 +52,12 @@ stretch = [1;1];
 gamma = 0*pi/180; % [rad] CCW | Post rotate
 
 % Function: g(x):= 1/||x||^alpha
-nav_p.alpha = 0.2; % Best value 0.2
+nav_p.alpha = 0.4; % Best value 0.2
 
 % Euler Parameters
 M = 10000; %loop iterations
 deltaT = 0.01;
-ctrl_multiplier = 80; % Parameter to change
+ctrl_multiplier = 1e3; % Parameter to change
 
 % Optimize function handle generation
 vpa_enable = true;
@@ -188,6 +188,10 @@ end
 if save_videos
     close(vidFile);
 end
+
+%% plot time domain
+t = 1:size(x_euler1,1);
+plot(t,[x_euler1(:,1),x_euler1(:,2)]);
 
 %%
 function bumpHandles = createBumpHandles()

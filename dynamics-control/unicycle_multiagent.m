@@ -26,7 +26,7 @@ if nargin < 12
 end
 rad_from_goal = p.rad_from_goal;
 saturation = 2;
-Kp = 10;
+Kp = 1;
 theta = x(3);
 
 %% control for each agent
@@ -74,22 +74,6 @@ if agent_number == 4
         u_hat = -ctrl_multiplier*grad_phi_f(x);
     end
 end
-    
-%% add wrapping for theta tilde
-if theta_tilda > pi
-    j = 1;
-    while theta_tilda/pi > (2*j) + 1
-        j = j+1;
-    end
-    theta_tilda = theta_tilda - j*(2*pi);
-end
-if theta_tilda < -pi
-    j = 1;
-    while theta_tilda/(-pi) > (2*j) + 1
-        j = j+1;
-    end
-    theta_tilda = theta_tilda + j*(2*pi);
-end
 
 %% Switch control
 if(norm(x-xd)<rad_from_goal)
@@ -103,11 +87,12 @@ else
     % stack state and controls
     x1_dot = vel*cos(theta);
     x2_dot = vel*sin(theta);
-    
+
     % use backstepping to map single integrator control to unicycle model
     theta_tilda_dot = backwardEuler(theta_tilda,deltaT);
     w = theta_tilda_dot - Kp*(theta-theta_tilda);
     theta_dot = w;
+
     u = [vel; w];
     x_dot = [x1_dot; x2_dot; theta_dot];
 end
