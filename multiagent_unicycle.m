@@ -15,14 +15,14 @@ addpath('./bump_lib');
 % nav_p.x04 = [-0.5;-3]; % Start position agent 3
 % nav_p.xd4 = [0.5;-3]; % Goal position agebt 3
 
-nav_p.x01 = [0;2]; % Start position agent 1
-nav_p.xd1 = [-0.1;-2]; % Goal position agebt 1
-nav_p.x02 = [0;-2]; % Start position agent 2
-nav_p.xd2 = [0.1;2]; % Goal position agebt 2
-nav_p.x03 = [2;0]; % Start position agent 3
-nav_p.xd3 = [-2;0.1]; % Goal position agebt 3
-nav_p.x04 = [-2;0]; % Start position agent 3
-nav_p.xd4 = [2;-0.1]; % Goal position agebt 3
+nav_p.x01 = [0;2;-pi/2]; % Start position agent 1
+nav_p.xd1 = [-0.1;-2;-pi/2]; % Goal position agebt 1
+nav_p.x02 = [0;-2;pi/2]; % Start position agent 2
+nav_p.xd2 = [0.1;2;pi/2]; % Goal position agebt 2
+nav_p.x03 = [2;0;pi]; % Start position agent 3
+nav_p.xd3 = [-2;0.1;pi]; % Goal position agebt 3
+nav_p.x04 = [-2;0;0]; % Start position agent 3
+nav_p.xd4 = [2;-0.1;0]; % Goal position agebt 3
 
 nav_p.p = 2; % Generate obstacle set off p-norm
 
@@ -35,10 +35,10 @@ sample_rate = 50; % Every sample_rate to plot trajectory of vehicle
 
 % General function: f(x) = ke^(-a/(1-b(x-c)^2)) + d
 % Function: f(x):= k/exp(a/(1-||x-c||^2)) - k/e^a
-nav_p.r11 = 0.5; nav_p.r12 = 1;
-nav_p.r21 = 0.5; nav_p.r22 = 1;
-nav_p.r31 = 0.5; nav_p.r32 = 1;
-nav_p.r41 = 0.5; nav_p.r42 = 1;
+nav_p.r11 = 0.5; nav_p.r12 = 0.6;
+nav_p.r21 = 0.5; nav_p.r22 = 0.6;
+nav_p.r31 = 0.5; nav_p.r32 = 0.6;
+nav_p.r41 = 0.5; nav_p.r42 = 0.6;
 
 % Obstancle centers (e.g. c1 and c2) | Domain R^n
 c1 = nav_p.x01; 
@@ -52,12 +52,12 @@ stretch = [1;1];
 gamma = 0*pi/180; % [rad] CCW | Post rotate
 
 % Function: g(x):= 1/||x||^alpha
-nav_p.alpha = 0.4; % Best value 0.2
+nav_p.alpha = 0.2; % Best value 0.2
 
 % Euler Parameters
-M = 1000; %loop iterations
+M = 5000; %loop iterations
 deltaT = 0.01;
-ctrl_multiplier = 80; % Parameter to change
+ctrl_multiplier = 5; % Parameter to change
 
 % Optimize function handle generation
 vpa_enable = true;
@@ -73,10 +73,10 @@ syms x [2,1] real
 
 [A, A_inv] = transformationMatrix(theta, stretch, 2);
 
-g1 = 1/norm(x-nav_p.xd1)^(2*nav_p.alpha); % rho for agent 1
-g2 = 1/norm(x-nav_p.xd2)^(2*nav_p.alpha); % rho for agent 2
-g3 = 1/norm(x-nav_p.xd3)^(2*nav_p.alpha); % rho for agent 3
-g4 = 1/norm(x-nav_p.xd4)^(2*nav_p.alpha); % rho for agent 4
+g1 = 1/norm(x(1:2)-nav_p.xd1(1:2))^(2*nav_p.alpha); % rho for agent 1
+g2 = 1/norm(x(1:2)-nav_p.xd2(1:2))^(2*nav_p.alpha); % rho for agent 2
+g3 = 1/norm(x(1:2)-nav_p.xd3(1:2))^(2*nav_p.alpha); % rho for agent 3
+g4 = 1/norm(x(1:2)-nav_p.xd4(1:2))^(2*nav_p.alpha); % rho for agent 4
 
 %% Form system matrices and LQR Gain
 [single_int_p, dbl_int_p] = generateStateSpace(deltaT, x);
@@ -87,16 +87,16 @@ x3_temp = nav_p.x03;
 x4_temp = nav_p.x04;
 
 x_euler1 = zeros(M,size(nav_p.x01,1));
-u_euler1 = zeros(size(x_euler1));
+u_euler1 = zeros(M,2);
 
 x_euler2 = zeros(M,size(nav_p.x02,1));
-u_euler2 = zeros(size(x_euler2));
+u_euler2 = zeros(M,2);
 
 x_euler3 = zeros(M,size(nav_p.x03,1));
-u_euler3 = zeros(size(x_euler3));
+u_euler3 = zeros(M,2);
 
 x_euler4 = zeros(M,size(nav_p.x04,1));
-u_euler4 = zeros(size(x_euler4));
+u_euler4 = zeros(M,2);
 
 % create function handle for bump functions and gradients
 bumpHandles = createBumpHandles();
@@ -110,19 +110,19 @@ for iter = 1:M
     % using Euler method
     
     [x_euler1(iter,:), u_euler1(iter,:)] = forwardEuler_multiagent(nav_p, deltaT, ctrl_multiplier, ...
-                        @singleIntegrator_multiagent,gradDensityHandles,c1,c2,c3,c4, single_int_p,x1_temp,1);
+                        @unicycle_multiagent,gradDensityHandles,c1,c2,c3,c4, single_int_p,x1_temp,1);
     x1_temp = x_euler1(iter,:)';
     
     [x_euler2(iter,:), u_euler2(iter,:)] = forwardEuler_multiagent(nav_p, deltaT, ctrl_multiplier, ...
-                        @singleIntegrator_multiagent,gradDensityHandles,c1,c2,c3,c4, single_int_p,x2_temp,2);
+                        @unicycle_multiagent,gradDensityHandles,c1,c2,c3,c4, single_int_p,x2_temp,2);
     x2_temp = x_euler2(iter,:)';
     
     [x_euler3(iter,:), u_euler3(iter,:)] = forwardEuler_multiagent(nav_p, deltaT, ctrl_multiplier, ...
-                        @singleIntegrator_multiagent,gradDensityHandles,c1,c2,c3,c4, single_int_p,x3_temp,3);
+                        @unicycle_multiagent,gradDensityHandles,c1,c2,c3,c4, single_int_p,x3_temp,3);
     x3_temp = x_euler3(iter,:)';
     
     [x_euler4(iter,:), u_euler4(iter,:)] = forwardEuler_multiagent(nav_p, deltaT, ctrl_multiplier, ...
-                        @singleIntegrator_multiagent,gradDensityHandles,c1,c2,c3,c4, single_int_p,x4_temp,4);
+                        @unicycle_multiagent,gradDensityHandles,c1,c2,c3,c4, single_int_p,x4_temp,4);
     x4_temp = x_euler4(iter,:)';
     
     c1 = x1_temp; 
@@ -224,10 +224,10 @@ function gradDensityHandles = createGradientHandles(nav_p)
     syms c4 [2,1] real
 
     % form V(x) for each agent
-    g1 = 1/norm(x-nav_p.xd1)^(2*nav_p.alpha); 
-    g2 = 1/norm(x-nav_p.xd2)^(2*nav_p.alpha); 
-    g3 = 1/norm(x-nav_p.xd3)^(2*nav_p.alpha);
-    g4 = 1/norm(x-nav_p.xd4)^(2*nav_p.alpha); 
+    g1 = 1/norm(x(1:2)-nav_p.xd1(1:2))^(2*nav_p.alpha); 
+    g2 = 1/norm(x(1:2)-nav_p.xd2(1:2))^(2*nav_p.alpha); 
+    g3 = 1/norm(x(1:2)-nav_p.xd3(1:2))^(2*nav_p.alpha);
+    g4 = 1/norm(x(1:2)-nav_p.xd4(1:2))^(2*nav_p.alpha); 
 
     % Compute densities using bump handles
     grad_density1 = gradient(g1 * bumpHandles.bump1Handle(nav_p,c1,c2,c3,c4),x);
