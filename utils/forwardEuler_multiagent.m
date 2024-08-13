@@ -24,31 +24,47 @@ if nargin <  13
     dens_bool = true;
 end
 
-[x_dot, u_euler] = dynamics(deltaT, x_temp,ctrl_multiplier, gradDensityHandles,c1,c2,c3,c4, p, dyn_p, agent_number, dens_bool);
+[x_dot, u_euler, isgoal] = dynamics(deltaT, x_temp,ctrl_multiplier, gradDensityHandles,c1,c2,c3,c4, p, dyn_p, agent_number, dens_bool);
 
-x_euler = x_temp + deltaT*x_dot;
-
-%% wrap theta
-theta = x_euler(3);
-if theta > pi
-    disp('wrap')
-    j = 1;
-    while theta/pi > (2*j) + 1
-        j = j+1;
+if(~isgoal)
+    x_euler = x_temp + deltaT*x_dot;
+    
+    % wrap theta
+    theta = x_euler(3);
+    % if theta > pi
+    %     disp('wrap')
+    %     j = 1;
+    %     while theta/pi > (2*j) + 1
+    %         j = j+1;
+    %     end
+    %     theta = theta - j*(2*pi);
+    % end
+    % if theta < -pi
+    %     disp('wrap')
+    %     j = 1;
+    %     while theta/(-pi) > (2*j) + 1
+    %         j = j+1;
+    %     end
+    %     theta = theta + j*(2*pi);
+    % end
+    
+    % Normalize the angle to be within the range [-pi, pi)
+    theta = mod(theta + pi, 2*pi) - pi;
+    
+    % Adjust for cases where angle_wrapped is slightly outside [-pi, pi)
+    if theta >= pi
+        theta = theta - 2*pi;
+    elseif theta < -pi
+        theta = theta + 2*pi;
     end
-    theta = theta - j*(2*pi);
+    x_euler(3) = theta;
+else
+    x_euler = x_temp;
+    x_dot = zeros(size(x_temp));
+    u_euler = zeros(2,1);
 end
-if theta < -pi
-    disp('wrap')
-    j = 1;
-    while theta/(-pi) > (2*j) + 1
-        j = j+1;
-    end
-    theta = theta + j*(2*pi);
-end
-x_euler(3) = theta;
 
-%% transpose and return variables
+% transpose and return variables
 x_euler = x_euler';
 x_dot = x_dot';
 u_euler = u_euler';

@@ -8,37 +8,33 @@ addpath('./utils');
 addpath('dynamics-control');
 addpath('./bump_lib');
 
-%% Problem setup
-% Navigation Parameters
-% nav_p.x01 = [-3;0]; % Start position agent 1
-% nav_p.xd1 = [3;0]; % Goal position agebt 1
-% nav_p.x04 = [-0.5;-3]; % Start position agent 3
-% nav_p.xd4 = [0.5;-3]; % Goal position agebt 3
+% clear persistant values
+clear backwardEuler
+clear forwardEuler
 
-nav_p.x01 = [0;10;-pi/2]; % Start position agent 1
-nav_p.xd1 = [-0.1;-10;-pi/2]; % Goal position agebt 1
-nav_p.x02 = [0;-10;pi/2]; % Start position agent 2
-nav_p.xd2 = [0.1;10;pi/2]; % Goal position agebt 2
-nav_p.x03 = [10;0;pi]; % Start position agent 3
-nav_p.xd3 = [-10;0.1;pi]; % Goal position agebt 3
-nav_p.x04 = [-10;0;0]; % Start position agent 3
-nav_p.xd4 = [10;-0.1;0]; % Goal position agebt 3
+%% Problem setup
+env_size = 5;
+nav_p.x01 = [0;env_size;-pi/2]; % Start position agent 1
+nav_p.xd1 = [-0.1;-env_size;-pi/2]; % Goal position agebt 1
+nav_p.x02 = [0;-env_size;pi/2]; % Start position agent 2
+nav_p.xd2 = [0.1;env_size;pi/2]; % Goal position agebt 2
+nav_p.x03 = [env_size;0;pi]; % Start position agent 3
+nav_p.xd3 = [-env_size;0.1;pi]; % Goal position agebt 3
+nav_p.x04 = [-env_size;0;0]; % Start position agent 3
+nav_p.xd4 = [env_size;-0.1;0]; % Goal position agebt 3
 
 nav_p.p = 2; % Generate obstacle set off p-norm
 
 % Target set radius | Radius when to stop using Density FB control
-nav_p.rad_from_goal = 0.75; % Original value: 1.0
+nav_p.rad_from_goal = 1; % Original value: 1.0
 
-% Ego Vehicle Size
-nav_p.ego_r = 0.0; % Diameter of ego
-sample_rate = 50; % Every sample_rate to plot trajectory of vehicle
 
 % General function: f(x) = ke^(-a/(1-b(x-c)^2)) + d
 % Function: f(x):= k/exp(a/(1-||x-c||^2)) - k/e^a
-nav_p.r11 = 0.5; nav_p.r12 = 0.6;
-nav_p.r21 = 0.5; nav_p.r22 = 0.6;
-nav_p.r31 = 0.5; nav_p.r32 = 0.6;
-nav_p.r41 = 0.5; nav_p.r42 = 0.6;
+nav_p.r11 = 0.5; nav_p.r12 = 2;
+nav_p.r21 = 0.5; nav_p.r22 = 2;
+nav_p.r31 = 0.5; nav_p.r32 = 2;
+nav_p.r41 = 0.5; nav_p.r42 = 2;
 
 % Obstancle centers (e.g. c1 and c2) | Domain R^n
 c1 = nav_p.x01; 
@@ -57,7 +53,7 @@ nav_p.alpha = 0.4; % Best value 0.2
 % Euler Parameters
 M = 10000; %loop iterations
 deltaT = 0.01;
-ctrl_multiplier = 1e3; % Parameter to change
+ctrl_multiplier = 5; % Parameter to change
 
 % Optimize function handle generation
 vpa_enable = true;
@@ -66,17 +62,10 @@ if vpa_enable
     optimize = false; % Set optimize also false s.t. symbolic tool generation is fast / manageable
 end
 
-
 %% Density Function Formulation
 % Create function of density and bump function
 syms x [2,1] real
-
 [A, A_inv] = transformationMatrix(theta, stretch, 2);
-
-g1 = 1/norm(x(1:2)-nav_p.xd1(1:2))^(2*nav_p.alpha); % rho for agent 1
-g2 = 1/norm(x(1:2)-nav_p.xd2(1:2))^(2*nav_p.alpha); % rho for agent 2
-g3 = 1/norm(x(1:2)-nav_p.xd3(1:2))^(2*nav_p.alpha); % rho for agent 3
-g4 = 1/norm(x(1:2)-nav_p.xd4(1:2))^(2*nav_p.alpha); % rho for agent 4
 
 %% Form system matrices and LQR Gain
 [single_int_p, dbl_int_p] = generateStateSpace(deltaT, x);
@@ -132,12 +121,81 @@ for iter = 1:M
 
 end
 
+%% plot time domain
+figure()
+t = 1:size(x_euler1,1);
+subplot(2,2,1)
+plot(t,[x_euler1(:,1),x_euler1(:,2)],'LineWidth',2);
+ylabel('states')
+xlabel('timesteps')
+box on
+subplot(2,2,2)
+plot(t,[x_euler2(:,1),x_euler2(:,2)],'LineWidth',2);
+ylabel('states')
+xlabel('timesteps')
+box on
+subplot(2,2,3)
+plot(t,[x_euler3(:,1),x_euler3(:,2)],'LineWidth',2);
+ylabel('states')
+xlabel('timesteps')
+box on
+subplot(2,2,4)
+plot(t,[x_euler4(:,1),x_euler4(:,2)],'LineWidth',2);
+ylabel('states')
+xlabel('timesteps')
+box on
+
+figure()
+subplot(2,2,1)
+plot(t,u_euler1(:,1),'LineWidth',2);
+ylabel('velocity')
+xlabel('timesteps')
+box on
+subplot(2,2,2)
+plot(t,u_euler2(:,1),'LineWidth',2);
+ylabel('velocity')
+xlabel('timesteps')
+box on
+subplot(2,2,3)
+plot(t,u_euler3(:,1),'LineWidth',2);
+ylabel('velocity')
+xlabel('timesteps')
+box on
+subplot(2,2,4)
+plot(t,u_euler4(:,1),'LineWidth',2);
+ylabel('velocity')
+xlabel('timesteps')
+box on
+
+figure()
+subplot(2,2,1)
+plot(t,u_euler1(:,2),'LineWidth',2);
+ylabel('omega')
+xlabel('timesteps')
+box on
+subplot(2,2,2)
+plot(t,u_euler2(:,2),'LineWidth',2);
+ylabel('omega')
+xlabel('timesteps')
+box on
+subplot(2,2,3)
+plot(t,u_euler3(:,2),'LineWidth',2);
+ylabel('omega')
+xlabel('timesteps')
+box on
+subplot(2,2,4)
+plot(t,u_euler4(:,2),'LineWidth',2);
+ylabel('omega')
+xlabel('timesteps')
+box on
+
+
 %% Animation
 skip_rate = 10;
 save_videos = true;
 
 multiagent_obstacle_avoidance = sprintf(...
-    'animations/scenario3.mp4',...
+    'animations/scenario.mp4',...
     deltaT, ctrl_multiplier);
 
 if save_videos
@@ -174,8 +232,8 @@ for jj=1:skip_rate:M
     set(gca, 'ytick', []);
     axis square
     axis tight
-    xlim([-12,12]);
-    ylim([-12,12]);
+    xlim([-20,20]);
+    ylim([-20,20]);
     timestamp = sprintf("Time: %0.2f s", deltaT*jj);
     text(0.6,0.1, timestamp, 'Units', 'normalized');
     %obs_period = sprintf("Obstacle frequency: %0.2f Hz", nav_p.obstacle_freq);
@@ -188,10 +246,6 @@ end
 if save_videos
     close(vidFile);
 end
-
-%% plot time domain
-t = 1:size(x_euler1,1);
-plot(t,[x_euler1(:,1),x_euler1(:,2)]);
 
 %%
 function bumpHandles = createBumpHandles()

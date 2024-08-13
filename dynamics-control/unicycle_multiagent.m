@@ -1,6 +1,5 @@
-function [x_dot, u] = unicycle_multiagent(deltaT,x,ctrl_multiplier, gradDensityHandles,c1,c2,c3,c4, p, single_int_p, agent_number, dens_bool)
-%singleIntegrator
-%   Propagates the kinematic model (i.e. single integrator system) with a
+function [x_dot, u, isgoal] = unicycle_multiagent(deltaT,x,ctrl_multiplier, gradDensityHandles,c1,c2,c3,c4, p, single_int_p, agent_number, dens_bool)
+%   Propagates the kinematic model with a
 %   control and changes to a LQR control given a radius from goal
 % Inputs:
 %   t                   : Discrete time
@@ -25,9 +24,11 @@ if nargin < 12
     dens_bool = true;
 end
 rad_from_goal = p.rad_from_goal;
-saturation = 2;
-Kp = 1;
+saturation_vel = 2;
+saturation_omega = 5;
+Kp = 20; 
 theta = x(3);
+isgoal = false;
 
 %% control for each agent
 if agent_number == 1
@@ -75,31 +76,39 @@ if agent_number == 4
     end
 end
 
-%% Switch control
+%% Switch control if near goal
 if(norm(x-xd)<rad_from_goal)
-    x_dot = zeros(length(x), 1);
-    u = zeros(2, 1);
-
+    % x_dot = zeros(length(x), 1);
+    % u = zeros(2, 1);
+    disp('-----reached goal-----')
+    isgoal = true;
     % LQR Feedback Gain
-    % u_hat = -single_int_p.K*(x-xd);
-    % x_dot = single_int_p.A*x+single_int_p.B*u_hat;
-else
-    % stack state and controls
-    x1_dot = vel*cos(theta);
-    x2_dot = vel*sin(theta);
-
-    % use backstepping to map single integrator control to unicycle model
-    theta_tilda_dot = backwardEuler(theta_tilda,deltaT);
-    w = theta_tilda_dot - Kp*(theta-theta_tilda);
-    theta_dot = w;
-
-    u = [vel; w];
-    x_dot = [x1_dot; x2_dot; theta_dot];
+    u_hat = -single_int_p.K*(x(1:2)-xd(1:2));
+    vel = norm(u_hat);
+    theta_tilda = atan2(u_hat(2),u_hat(1));
 end
+
+%% stack state and controls
+x1_dot = vel*cos(theta_tilda);
+x2_dot = vel*sin(theta_tilda);
+
+% use backstepping to map single integrator control to unicycle model
+theta_tilda_dot = backwardEuler(theta_tilda,deltaT);
+w = theta_tilda_dot;
+% w = theta_tilda_dot - Kp*(theta-theta_tilda);
+theta_dot = w;
+
+u = [vel; w];
+x_dot = [x1_dot; x2_dot; theta_dot];
 
 %% add saturation
 [max_u, ~] = max(abs(u(1)));
-if max_u >= saturation
-    u(1) = u(1)/max_u*saturation;
+if max_u >= saturation_vel
+    u(1) = u(1)/max_u*saturation_vel;
+end
+
+[max_u, ~] = max(abs(u(2)));
+if max_u >= saturation_omega
+    u(2) = u(2)/max_u*saturation_omega;
 end
 
