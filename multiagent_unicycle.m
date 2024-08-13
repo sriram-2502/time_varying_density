@@ -13,7 +13,7 @@ clear backwardEuler
 clear forwardEuler
 
 %% Problem setup
-env_size = 5;
+env_size = 8;
 nav_p.x01 = [0;env_size;-pi/2]; % Start position agent 1
 nav_p.xd1 = [-0.1;-env_size;-pi/2]; % Goal position agebt 1
 nav_p.x02 = [0;-env_size;pi/2]; % Start position agent 2
@@ -26,7 +26,7 @@ nav_p.xd4 = [env_size;-0.1;0]; % Goal position agebt 3
 nav_p.p = 2; % Generate obstacle set off p-norm
 
 % Target set radius | Radius when to stop using Density FB control
-nav_p.rad_from_goal = 1; % Original value: 1.0
+nav_p.rad_from_goal = 2; % Original value: 1.0
 
 
 % General function: f(x) = ke^(-a/(1-b(x-c)^2)) + d
@@ -53,7 +53,7 @@ nav_p.alpha = 0.4; % Best value 0.2
 % Euler Parameters
 M = 10000; %loop iterations
 deltaT = 0.01;
-ctrl_multiplier = 5; % Parameter to change
+ctrl_multiplier = 25; % Parameter to change
 
 % Optimize function handle generation
 vpa_enable = true;

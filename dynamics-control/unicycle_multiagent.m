@@ -78,14 +78,14 @@ end
 
 %% Switch control if near goal
 if(norm(x-xd)<rad_from_goal)
-    % x_dot = zeros(length(x), 1);
-    % u = zeros(2, 1);
-    disp('-----reached goal-----')
+    vel = 0;
+    theta_tilda = 0;
+
     isgoal = true;
     % LQR Feedback Gain
-    u_hat = -single_int_p.K*(x(1:2)-xd(1:2));
-    vel = norm(u_hat);
-    theta_tilda = atan2(u_hat(2),u_hat(1));
+    % u_hat = -single_int_p.K*(x(1:2)-xd(1:2));
+    % vel = norm(u_hat);
+    % theta_tilda = atan2(u_hat(2),u_hat(1));
 end
 
 %% stack state and controls

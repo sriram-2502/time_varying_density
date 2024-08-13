@@ -31,34 +31,26 @@ if(~isgoal)
     
     % wrap theta
     theta = x_euler(3);
-    % if theta > pi
-    %     disp('wrap')
-    %     j = 1;
-    %     while theta/pi > (2*j) + 1
-    %         j = j+1;
-    %     end
-    %     theta = theta - j*(2*pi);
-    % end
-    % if theta < -pi
-    %     disp('wrap')
-    %     j = 1;
-    %     while theta/(-pi) > (2*j) + 1
-    %         j = j+1;
-    %     end
-    %     theta = theta + j*(2*pi);
-    % end
-    
-    % Normalize the angle to be within the range [-pi, pi)
-    theta = mod(theta + pi, 2*pi) - pi;
-    
-    % Adjust for cases where angle_wrapped is slightly outside [-pi, pi)
-    if theta >= pi
-        theta = theta - 2*pi;
-    elseif theta < -pi
-        theta = theta + 2*pi;
+    if theta > pi
+        disp('wrap')
+        j = 1;
+        while theta/pi > (2*j) + 1
+            j = j+1;
+        end
+        theta = theta - j*(2*pi);
     end
+    if theta < -pi
+        disp('wrap')
+        j = 1;
+        while theta/(-pi) > (2*j) + 1
+            j = j+1;
+        end
+        theta = theta + j*(2*pi);
+    end
+
     x_euler(3) = theta;
 else
+    disp(['----- ', num2str(agent_number), ' reached goal -----'])
     x_euler = x_temp;
     x_dot = zeros(size(x_temp));
     u_euler = zeros(2,1);
