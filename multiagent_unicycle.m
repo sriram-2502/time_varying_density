@@ -15,14 +15,14 @@ addpath('./bump_lib');
 % nav_p.x04 = [-0.5;-3]; % Start position agent 3
 % nav_p.xd4 = [0.5;-3]; % Goal position agebt 3
 
-nav_p.x01 = [0;2;-pi/2]; % Start position agent 1
-nav_p.xd1 = [-0.1;-2;-pi/2]; % Goal position agebt 1
-nav_p.x02 = [0;-2;pi/2]; % Start position agent 2
-nav_p.xd2 = [0.1;2;pi/2]; % Goal position agebt 2
-nav_p.x03 = [2;0;pi]; % Start position agent 3
-nav_p.xd3 = [-2;0.1;pi]; % Goal position agebt 3
-nav_p.x04 = [-2;0;0]; % Start position agent 3
-nav_p.xd4 = [2;-0.1;0]; % Goal position agebt 3
+nav_p.x01 = [0;10;-pi/2]; % Start position agent 1
+nav_p.xd1 = [-0.1;-10;-pi/2]; % Goal position agebt 1
+nav_p.x02 = [0;-10;pi/2]; % Start position agent 2
+nav_p.xd2 = [0.1;10;pi/2]; % Goal position agebt 2
+nav_p.x03 = [10;0;pi]; % Start position agent 3
+nav_p.xd3 = [-10;0.1;pi]; % Goal position agebt 3
+nav_p.x04 = [-10;0;0]; % Start position agent 3
+nav_p.xd4 = [10;-0.1;0]; % Goal position agebt 3
 
 nav_p.p = 2; % Generate obstacle set off p-norm
 
@@ -55,9 +55,9 @@ gamma = 0*pi/180; % [rad] CCW | Post rotate
 nav_p.alpha = 0.2; % Best value 0.2
 
 % Euler Parameters
-M = 5000; %loop iterations
+M = 10000; %loop iterations
 deltaT = 0.01;
-ctrl_multiplier = 5; % Parameter to change
+ctrl_multiplier = 80; % Parameter to change
 
 % Optimize function handle generation
 vpa_enable = true;
@@ -174,8 +174,8 @@ for jj=1:skip_rate:M
     set(gca, 'ytick', []);
     axis square
     axis tight
-    xlim([-5,5]);
-    ylim([-5,5]);
+    xlim([-12,12]);
+    ylim([-12,12]);
     timestamp = sprintf("Time: %0.2f s", deltaT*jj);
     text(0.6,0.1, timestamp, 'Units', 'normalized');
     %obs_period = sprintf("Obstacle frequency: %0.2f Hz", nav_p.obstacle_freq);
