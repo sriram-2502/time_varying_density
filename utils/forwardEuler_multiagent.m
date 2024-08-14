@@ -1,51 +1,50 @@
-function [x_euler, u_euler, x_dot] = forwardEuler_multiagent(p, deltaT, ctrl_multiplier, dynamics, gradDensityHandles,c1,c2,c3,c4, dyn_p,x_temp, agent_number, dens_bool)
-% TODO(AZ): Create fixed size array instead of using dynamic array
-%forwardEuler
-%   Forward euler integration to propagate dynamics. Returns x
-%
-% Inputs:
-%   p                   : Parameters specifically containing init
-%                           conditions x0 (R^n), goal state xd (R^n) & 
-%                           radius from goal (R^1)
-%   N                   : Number of forward integration
-%   deltaT              : Discrete step size (R^n)
-%   ctrl_multiplier     : Multiplier on control (R^n)
-%   dynamics            : Function handle to use as dynamics
-%   dyn_p               : Dynamic system parameter. More specifically,
-%                           the A, B system matrices, the LQR Feedback 
-%                           Gain close to goal, and dimension of control
-%
-% Outputs:
-%   x_euler             : Forward integrated states (R^(nx(N+1)))
-%   u_euler             : Control input trajectory (R^(nx(N)))
-%   x_dot               : State derivative trajectory (R^(nxN))
+function [x_euler, u_euler, x_dot] = forwardEuler_multiagent(p, deltaT, ctrl_multiplier, dynamics, gradDensityHandles, c1, c2, c3, c4, dyn_p, x_temp, agent_number, dens_bool)
+    % Forward Euler integration to propagate dynamics and return states
+    %
+    % Inputs:
+    %   p                   : Parameters (initial conditions x0, goal state xd, radius from goal)
+    %   deltaT              : Discrete step size
+    %   ctrl_multiplier     : Multiplier on control
+    %   dynamics            : Function handle for dynamics
+    %   gradDensityHandles  : Handles to gradient density functions
+    %   c1, c2, c3, c4      : Parameters for gradient functions
+    %   dyn_p               : Dynamic system parameters (A, B matrices, LQR Feedback Gain)
+    %   x_temp              : Current state
+    %   agent_number        : Index of the agent
+    %   dens_bool           : Boolean to enable density functions vs navigation functions
+    %
+    % Outputs:
+    %   x_euler             : Forward integrated states
+    %   u_euler             : Control input trajectory
+    %   x_dot               : State derivative trajectory
 
-if nargin <  13
-    dens_bool = true;
-end
+    % Default argument
+    if nargin < 13
+        dens_bool = true;
+    end
 
-[x_dot, u_euler, isgoal] = dynamics(deltaT, x_temp,ctrl_multiplier, gradDensityHandles,c1,c2,c3,c4, p, dyn_p, agent_number, dens_bool);
+    % Compute state derivatives and control inputs
+    [x_dot, u_euler, isgoal] = dynamics(deltaT, x_temp, ctrl_multiplier, gradDensityHandles, c1, c2, c3, c4, p, dyn_p, agent_number, dens_bool);
 
-if(~isgoal)
-    x_euler = x_temp + deltaT*x_dot;
-    % wrap theta
-    theta = x_euler(3);
-    disp(['original theta: ', num2str(theta)]);
-    % Use atan2 to handle wrapping more gracefully
-    theta = atan2(sin(theta), cos(theta));
-    % Display debug information if needed
-    disp(['Wrapped theta: ', num2str(theta)]);
-    x_euler(3) = theta;
-else
-    disp(['----- ', num2str(agent_number), ' reached goal -----'])
-    x_euler = x_temp;
-    x_dot = zeros(size(x_temp));
-    u_euler = zeros(2,1);
-end
+    if ~isgoal
+        % Forward Euler integration
+        x_euler = x_temp + deltaT * x_dot;
 
-% transpose and return variables
-x_euler = x_euler';
-x_dot = x_dot';
-u_euler = u_euler';
+        % Wrap theta to the range [-pi, pi]
+        theta = x_euler(3);
+        theta = atan2(sin(theta), cos(theta));
+        x_euler(3) = theta;
+        
+    else
+        % Agent has reached the goal
+        disp(['----- Agent ', num2str(agent_number), ' reached goal -----'])
+        x_euler = x_temp;
+        x_dot = zeros(size(x_temp));
+        u_euler = zeros(2, 1);
+    end
 
+    % Transpose and return variables
+    x_euler = x_euler';
+    x_dot = x_dot';
+    u_euler = u_euler';
 end
