@@ -14,14 +14,14 @@ clear forwardEuler
 
 %% Problem setup
 env_size = 8;
-nav_p.x01 = [0;env_size;-pi/2]; % Start position agent 1
-nav_p.xd1 = [-0.1;-env_size;-pi/2]; % Goal position agebt 1
-nav_p.x02 = [0;-env_size;pi/2]; % Start position agent 2
-nav_p.xd2 = [0.1;env_size;pi/2]; % Goal position agebt 2
-nav_p.x03 = [env_size;0;pi]; % Start position agent 3
-nav_p.xd3 = [-env_size;0.1;pi]; % Goal position agebt 3
-nav_p.x04 = [-env_size;0;0]; % Start position agent 3
-nav_p.xd4 = [env_size;-0.1;0]; % Goal position agebt 3
+nav_p.x01 = [0;env_size;pi/2]; % Start position agent 1
+nav_p.xd1 = [-0.1;-env_size;pi/2]; % Goal position agebt 1
+nav_p.x02 = [0;-env_size;-pi/2]; % Start position agent 2
+nav_p.xd2 = [0.1;env_size;-pi/2]; % Goal position agebt 2
+nav_p.x03 = [env_size;0;0]; % Start position agent 3
+nav_p.xd3 = [-env_size;0.1;0]; % Goal position agebt 3
+nav_p.x04 = [-env_size;0;-pi]; % Start position agent 3
+nav_p.xd4 = [env_size;-0.1;-pi]; % Goal position agebt 3
 
 nav_p.p = 2; % Generate obstacle set off p-norm
 
@@ -194,57 +194,87 @@ box on
 skip_rate = 10;
 save_videos = true;
 
-multiagent_obstacle_avoidance = sprintf(...
-    'animations/scenario.mp4',...
-    deltaT, ctrl_multiplier);
+% Define the video file path and name
+video_file_path = sprintf('animations/scenario.mp4'); % Adjust path if necessary
 
 if save_videos
-    vidFile = VideoWriter(multiagent_obstacle_avoidance, 'MPEG-4');
+    vidFile = VideoWriter(video_file_path, 'MPEG-4');
     vidFile.FrameRate = 5;
     open(vidFile);
 end
 
 % jj := frame #
-for jj=1:skip_rate:M
+for jj = 1:skip_rate:M
     f1 = figure(999);
-    clf(f1); % clear current figure
-    set(f1, 'color', 'white') % Set figure to white
+    clf(f1); % Clear current figure
+    set(f1, 'color', 'white'); % Set figure to white
 
-    plot(x_euler1(1,1),x_euler1(1,2), 'or', 'MarkerSize',10, 'MarkerFaceColor','red'); hold on;
-    plot(nav_p.xd1(1),nav_p.xd1(2),'or', 'MarkerSize',10, 'MarkerFaceColor','red'); hold on;
-    plot(x_euler2(1,1),x_euler2(1,2), 'og', 'MarkerSize',10, 'MarkerFaceColor','green'); hold on;
-    plot(nav_p.xd2(1),nav_p.xd2(2),'og', 'MarkerSize',10, 'MarkerFaceColor','green'); hold on;
-    plot(x_euler3(1,1),x_euler3(1,2), 'ob', 'MarkerSize',10, 'MarkerFaceColor','blue'); hold on;
-    plot(nav_p.xd3(1),nav_p.xd3(2),'ob', 'MarkerSize',10, 'MarkerFaceColor','blue'); hold on;
-    plot(x_euler4(1,1),x_euler4(1,2), 'om', 'MarkerSize',10, 'MarkerFaceColor','magenta'); hold on;
-    plot(nav_p.xd4(1),nav_p.xd4(2),'om', 'MarkerSize',10, 'MarkerFaceColor','magenta'); hold on;
+    hold on;
+
+    % Plot each vehicle's state as a circle with heading line
+    % Vehicle 1
+    plotCircleAndHeading(x_euler1(jj,1), x_euler1(jj,2), x_euler1(jj,3), ...
+        nav_p.r11, nav_p.r12, 'red');
+    % Vehicle 2
+    plotCircleAndHeading(x_euler2(jj,1), x_euler2(jj,2), x_euler2(jj,3), ...
+        nav_p.r21, nav_p.r22, 'green');
+    % Vehicle 3
+    plotCircleAndHeading(x_euler3(jj,1), x_euler3(jj,2), x_euler3(jj,3), ...
+        nav_p.r31, nav_p.r32, 'blue');
+    % Vehicle 4
+    plotCircleAndHeading(x_euler4(jj,1), x_euler4(jj,2), x_euler4(jj,3), ...
+        nav_p.r41, nav_p.r42, 'magenta');
+
+    % Plot the desired positions
+    plot(nav_p.xd1(1), nav_p.xd1(2), 'or', 'MarkerSize', 10, 'MarkerFaceColor', 'red'); 
+    plot(nav_p.xd2(1), nav_p.xd2(2), 'og', 'MarkerSize', 10, 'MarkerFaceColor', 'green'); 
+    plot(nav_p.xd3(1), nav_p.xd3(2), 'ob', 'MarkerSize', 10, 'MarkerFaceColor', 'blue'); 
+    plot(nav_p.xd4(1), nav_p.xd4(2), 'om', 'MarkerSize', 10, 'MarkerFaceColor', 'magenta'); 
     
-    plot(x_euler1(jj,1),x_euler1(jj,2), 'ok', 'MarkerSize',10, 'MarkerFaceColor','black');
-    plot(x_euler2(jj,1),x_euler2(jj,2), 'ok', 'MarkerSize',10, 'MarkerFaceColor','black');
-    plot(x_euler3(jj,1),x_euler3(jj,2), 'ok', 'MarkerSize',10, 'MarkerFaceColor','black');
-    plot(x_euler4(jj,1),x_euler4(jj,2), 'ok', 'MarkerSize',10, 'MarkerFaceColor','black');
-    
-    titleName = sprintf('Multiagent obstacle avoidance');
-    % title(titleName);
-    % xlabel('$x_1$', 'interpreter', 'latex', 'FontSize', 20)
-    % ylabel('$x_2$', 'interpreter', 'latex', 'FontSize', 20)
+    % Set plot properties
+    title('Multiagent obstacle avoidance');
+    box on
     set(gca, 'xtick', []);
     set(gca, 'ytick', []);
-    axis square
-    axis tight
-    xlim([-20,20]);
-    ylim([-20,20]);
-    timestamp = sprintf("Time: %0.2f s", deltaT*jj);
-    text(0.6,0.1, timestamp, 'Units', 'normalized');
-    %obs_period = sprintf("Obstacle frequency: %0.2f Hz", nav_p.obstacle_freq);
-    %text(0.6, 0.05, obs_period, 'Units', 'normalized');
+    axis square;
+    axis tight;
+    xlim([-10, 10]);
+    ylim([-10, 10]);
+
+    % Add timestamp text
+    timestamp = sprintf('Time: %0.2f s', deltaT * jj);
+    text(0.6, 0.1, timestamp, 'Units', 'normalized');
+
+    % Write frame to video if saving
     if save_videos
-        writeVideo(vidFile, getframe(gcf));
+        frame = getframe(gcf);
+        writeVideo(vidFile, frame);
     end
 end
 
+% Close video file if saving
 if save_videos
     close(vidFile);
+end
+
+%% Function to plot circle, heading line, and sensing region
+function plotCircleAndHeading(x, y, theta, r1, r2, color)
+    % Plot the sensing region as a filled circle with transparency
+    theta_fill = linspace(0, 2*pi, 100);
+    x_fill = r2 * cos(theta_fill) + x;
+    y_fill = r2 * sin(theta_fill) + y;
+    fill(x_fill, y_fill, color, 'FaceAlpha', 0.3, 'EdgeColor', 'none'); % Adjust 'FaceAlpha' for transparency
+
+    % Plot the robot's circle
+    rectangle('Position', [x-r1, y-r1, 2*r1, 2*r1], ...
+              'Curvature', [1, 1], 'EdgeColor', color, 'LineWidth', 1.5);
+
+    % Compute the end point of the heading line
+    line_end_x = x + 1.5 * r1 * cos(theta); % Adjust line length if needed
+    line_end_y = y + 1.5 * r1 * sin(theta);
+
+    % Plot the heading line
+    plot([x, line_end_x], [y, line_end_y], 'Color', color, 'LineWidth', 1.5);
 end
 
 %%
