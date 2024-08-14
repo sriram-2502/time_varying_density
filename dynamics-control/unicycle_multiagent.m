@@ -25,8 +25,8 @@ if nargin < 12
 end
 rad_from_goal = p.rad_from_goal;
 saturation_vel = 2;
-saturation_omega = 5;
-Kp = 20; 
+saturation_omega = 2;
+Kp = 10; 
 theta = x(3);
 isgoal = false;
 
@@ -80,7 +80,6 @@ end
 if(norm(x-xd)<rad_from_goal)
     vel = 0;
     theta_tilda = 0;
-
     isgoal = true;
     % LQR Feedback Gain
     % u_hat = -single_int_p.K*(x(1:2)-xd(1:2));
@@ -93,9 +92,9 @@ x1_dot = vel*cos(theta_tilda);
 x2_dot = vel*sin(theta_tilda);
 
 % use backstepping to map single integrator control to unicycle model
-theta_tilda_dot = backwardEuler(theta_tilda,deltaT);
-w = theta_tilda_dot;
-% w = theta_tilda_dot - Kp*(theta-theta_tilda);
+theta_tilda_dot = backwardEuler(agent_number,theta_tilda,deltaT);
+% w = theta_tilda_dot;
+w = theta_tilda_dot - Kp*(theta-theta_tilda);
 theta_dot = w;
 
 u = [vel; w];

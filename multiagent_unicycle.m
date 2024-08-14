@@ -14,14 +14,14 @@ clear forwardEuler
 
 %% Problem setup
 env_size = 8;
-nav_p.x01 = [0;env_size;pi/2]; % Start position agent 1
-nav_p.xd1 = [-0.1;-env_size;pi/2]; % Goal position agebt 1
-nav_p.x02 = [0;-env_size;-pi/2]; % Start position agent 2
-nav_p.xd2 = [0.1;env_size;-pi/2]; % Goal position agebt 2
+nav_p.x01 = [0;env_size;0]; % Start position agent 1
+nav_p.xd1 = [-0.1;-env_size;0]; % Goal position agebt 1
+nav_p.x02 = [0;-env_size;0]; % Start position agent 2
+nav_p.xd2 = [0.1;env_size;0]; % Goal position agebt 2
 nav_p.x03 = [env_size;0;0]; % Start position agent 3
 nav_p.xd3 = [-env_size;0.1;0]; % Goal position agebt 3
-nav_p.x04 = [-env_size;0;-pi]; % Start position agent 3
-nav_p.xd4 = [env_size;-0.1;-pi]; % Goal position agebt 3
+nav_p.x04 = [-env_size;0;0]; % Start position agent 3
+nav_p.xd4 = [env_size;-0.1;0]; % Goal position agebt 3
 
 nav_p.p = 2; % Generate obstacle set off p-norm
 

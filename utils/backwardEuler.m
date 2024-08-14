@@ -1,16 +1,24 @@
-function [y_backward] = backwardEuler(y, deltaT)
-    persistent y_prev_initialized y_prev
+function [y_backward] = backwardEuler(agent_id, y, deltaT)
+    % Persistent variable to store agent states
+    persistent agentStates
     
-    % Initialize y_prev if it hasn't been initialized yet
-    if isempty(y_prev_initialized)
-        disp('setting zero for first iteration in backward euler')
-        y_prev_initialized = true;
-        y_prev = 0; % Use y_prev=0 at t = 0
+    % Initialize the map if it hasn't been initialized yet
+    if isempty(agentStates)
+        agentStates = containers.Map('KeyType', 'double', 'ValueType', 'any');
     end
-    
+
+    % Check if the agent's state exists in the map
+    if ~isKey(agentStates, agent_id)
+        disp(['Setting zero for agent ' num2str(agent_id) ' in backward euler'])
+        agentStates(agent_id) = 0; % Initialize y_prev for the agent
+    end
+
+    % Retrieve the previous state for the agent
+    y_prev = agentStates(agent_id);
+
     % Calculate the backward Euler approximation
     y_backward = (y - y_prev) / deltaT;
     
-    % Update y_prev for the next call
-    y_prev = y;
+    % Update the agent's previous state
+    agentStates(agent_id) = y;
 end
