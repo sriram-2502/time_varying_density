@@ -28,7 +28,6 @@ nav_p.p = 2; % Generate obstacle set off p-norm
 % Target set radius | Radius when to stop using Density FB control
 nav_p.rad_from_goal = 2; % Original value: 1.0
 
-
 % General function: f(x) = ke^(-a/(1-b(x-c)^2)) + d
 % Function: f(x):= k/exp(a/(1-||x-c||^2)) - k/e^a
 nav_p.r11 = 0.5; nav_p.r12 = 2;
@@ -51,9 +50,9 @@ gamma = 0*pi/180; % [rad] CCW | Post rotate
 nav_p.alpha = 0.4; % Best value 0.2
 
 % Euler Parameters
-M = 10000; %loop iterations
-deltaT = 0.01;
-ctrl_multiplier = 25; % Parameter to change
+M = 5000; %loop iterations
+deltaT = 0.1;
+ctrl_multiplier = 10; % Parameter to change
 
 % Optimize function handle generation
 vpa_enable = true;

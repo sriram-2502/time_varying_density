@@ -26,7 +26,7 @@ end
 rad_from_goal = p.rad_from_goal;
 saturation_vel = 2;
 saturation_omega = 2;
-Kp = 10; 
+Kp = 1; 
 theta = x(3);
 isgoal = false;
 
