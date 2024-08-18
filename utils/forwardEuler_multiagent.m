@@ -24,17 +24,18 @@ function [x_euler, u_euler, x_dot] = forwardEuler_multiagent(p, deltaT, ctrl_mul
     end
 
     % Compute state derivatives and control inputs
-    [x_dot, u_euler, isgoal] = dynamics(deltaT, x_temp, ctrl_multiplier, gradDensityHandles, c1, c2, c3, c4, p, dyn_p, agent_number, dens_bool);
-
-    if ~isgoal
+    [x_dot, u_euler, isgoal, unicycle] = dynamics(deltaT, x_temp, ctrl_multiplier, gradDensityHandles, c1, c2, c3, c4, p, dyn_p, agent_number, dens_bool);
+    
+    
+    if(~isgoal)
         % Forward Euler integration
         x_euler = x_temp + deltaT * x_dot;
-
-        % Wrap theta to the range [-pi, pi]
-        theta = x_euler(3);
-        theta = atan2(sin(theta), cos(theta));
-        x_euler(3) = theta;
-        
+        if(unicycle)
+            % Wrap theta to the range [-pi, pi]
+            theta = x_euler(3);
+            theta = atan2(sin(theta), cos(theta));
+            x_euler(3) = theta;
+        end         
     else
         % Agent has reached the goal
         disp(['----- Agent ', num2str(agent_number), ' reached goal -----'])

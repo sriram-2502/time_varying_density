@@ -13,4 +13,3 @@ function [y_forward] = forwardEuler(y, deltaT)
     % Update y_prev for the next call
     y_next = y;
 end
-end

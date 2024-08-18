@@ -49,7 +49,7 @@ gamma = 0; % Post-rotation angle in radians
 nav_p.alpha = 0.4; % Recommended value: 0.2
 
 % Simulation parameters
-M = 5000; % Number of loop iterations
+M = 2000; % Number of loop iterations
 deltaT = 0.1; % Time step
 ctrl_multiplier = 10; % Control parameter
 

@@ -37,8 +37,8 @@ sample_rate = 50; % Every sample_rate to plot trajectory of vehicle
 % Function: f(x):= k/exp(a/(1-||x-c||^2)) - k/e^a
 nav_p.r11 = 0.5; nav_p.r12 = 1;
 nav_p.r21 = 0.5; nav_p.r22 = 1;
-nav_p.r31 = 1; nav_p.r32 = 1.5;
-nav_p.r41 = 1; nav_p.r42 = 1.5;
+nav_p.r31 = 0.5; nav_p.r32 = 1;
+nav_p.r41 = 0.5; nav_p.r42 = 1;
 
 % Obstancle centers (e.g. c1 and c2) | Domain R^n
 c1 = nav_p.x01; 
