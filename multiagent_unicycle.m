@@ -18,18 +18,18 @@ clear forwardEuler
 env_size = 8;
 
 % Start and goal positions for agents
-nav_p.x01 = [0; env_size; 0];     % Start position for agent 1
-nav_p.xd1 = [-0.1; -env_size; 0]; % Goal position for agent 1
-nav_p.x02 = [0; -env_size; 0];    % Start position for agent 2
-nav_p.xd2 = [0.1; env_size; 0];   % Goal position for agent 2
-nav_p.x03 = [env_size; 0; 0];     % Start position for agent 3
-nav_p.xd3 = [-env_size; 0.1; 0];  % Goal position for agent 3
+nav_p.x01 = [0; env_size; -pi/2];     % Start position for agent 1
+nav_p.xd1 = [-0.1; -env_size; -pi/2]; % Goal position for agent 1
+nav_p.x02 = [0; -env_size; pi/2];    % Start position for agent 2
+nav_p.xd2 = [0.1; env_size; pi/2];   % Goal position for agent 2
+nav_p.x03 = [env_size; 0; pi];     % Start position for agent 3
+nav_p.xd3 = [-env_size; 0.1; pi];  % Goal position for agent 3
 nav_p.x04 = [-env_size; 0; 0];    % Start position for agent 4
 nav_p.xd4 = [env_size; -0.1; 0];  % Goal position for agent 4
             
 % Obstacle parameters
 nav_p.p = 2; % p-norm for obstacle set
-nav_p.rad_from_goal = 3; % Radius for stopping density feedback control
+nav_p.rad_from_goal = 0.1; % Radius for stopping density feedback control
 
 % Density function parameters
 nav_p.r11 = 0.5; nav_p.r12 = 2;
@@ -50,7 +50,7 @@ nav_p.alpha = 0.4; % Recommended value: 0.2
 
 % Simulation parameters
 M = 2000; % Number of loop iterations
-deltaT = 0.1; % Time step
+deltaT = 0.01; % Time step
 ctrl_multiplier = 10; % Control parameter
 
 % Optimization settings

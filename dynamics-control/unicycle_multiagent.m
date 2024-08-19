@@ -51,19 +51,19 @@ function [x_dot, u, isgoal, unicycle] = unicycle_multiagent(deltaT, x, ctrl_mult
     if dens_bool
         % Switch control if near the goal
         if norm(x - xd) < rad_from_goal
-            vel = 0;
-            theta_tilda = 0;
+            u_hat = -single_int_p.K*(x-xd);
+            % vel = 0;
+            % theta_tilda = 0;
             isgoal = true;
         else
             u_hat = ctrl_multiplier * grad_density(x, c1, c2, c3, c4);
-            vel = norm(u_hat);
-            theta_tilda = atan2(u_hat(2), u_hat(1));
         end
     else
         u_hat = -ctrl_multiplier * grad_phi_f(x);
-        vel = norm(u_hat);
-        theta_tilda = atan2(u_hat(2), u_hat(1));
+        
     end
+    vel = norm(u_hat);
+    theta_tilda = atan2(u_hat(2), u_hat(1));
 
     % Compute state derivatives
     x1_dot = vel * cos(theta_tilda);
