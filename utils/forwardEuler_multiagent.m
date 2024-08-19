@@ -24,42 +24,39 @@ function [x_euler, u_euler, x_dot] = forwardEuler_multiagent(p, deltaT, ctrl_mul
 
     % Compute state derivatives and control inputs
     [x_dot, u_euler, isgoal, unicycle] = dynamics(deltaT, x_temp, ctrl_multiplier, gradDensityHandles, c1, c2, c3, c4, p, dyn_p, agent_number, dens_bool);
-    
-    % compute states for RK4
-    % Step 1: Compute k1
-    [x_dot1, ~, ~, ~] = dynamics(deltaT, x_temp, ctrl_multiplier, gradDensityHandles, c1, c2, c3, c4, p, dyn_p, agent_number, dens_bool);
-    k1 = deltaT * x_dot1;
-    
-    % Step 2: Compute k2
-    [x_dot2, ~, ~, ~] = dynamics(deltaT, x_temp + 0.5 * k1, ctrl_multiplier, gradDensityHandles, c1, c2, c3, c4, p, dyn_p, agent_number, dens_bool);
-    k2 = deltaT * x_dot2;
-    
-    % Step 3: Compute k3
-    [x_dot3, ~, ~, ~] = dynamics(deltaT, x_temp + 0.5 * k2, ctrl_multiplier, gradDensityHandles, c1, c2, c3, c4, p, dyn_p, agent_number, dens_bool);
-    k3 = deltaT * x_dot3;
-    
-    % Step 4: Compute k4
-    [x_dot4, ~, ~, ~] = dynamics(deltaT, x_temp + k3, ctrl_multiplier, gradDensityHandles, c1, c2, c3, c4, p, dyn_p, agent_number, dens_bool);
-    k4 = deltaT * x_dot4;
+    % Forward Euler integration
+    x_euler = x_temp + deltaT * x_dot;
 
-    if(~isgoal)
-        % Forward Euler integration
-        % x_euler = x_temp + deltaT * x_dot;
-        % RK4
-        x_euler = x_temp + (1/6) * (k1 + 2*k2 + 2*k3 + k4);
 
-        if(unicycle)
-            % Wrap theta to the range [-pi, pi]
-            theta = x_euler(3);
-            theta = atan2(sin(theta), cos(theta));
-            x_euler(3) = theta;
-        end         
-    else
-        % Agent has reached the goal
+    % % compute states for RK4
+    % step_size = 0.01;
+    % % Step 1: Compute k1
+    % [x_dot1, ~, ~, ~] = dynamics(deltaT, x_temp, ctrl_multiplier, gradDensityHandles, c1, c2, c3, c4, p, dyn_p, agent_number, dens_bool);
+    % k1 = deltaT * x_dot1;
+    % 
+    % % Step 2: Compute k2
+    % [x_dot2, ~, ~, ~] = dynamics(deltaT+(step_size/2), x_temp+(step_size/2)*k1, ctrl_multiplier, gradDensityHandles, c1, c2, c3, c4, p, dyn_p, agent_number, dens_bool);
+    % k2 = deltaT * x_dot2;
+    % 
+    % % Step 3: Compute k3
+    % [x_dot3, ~, ~, ~] = dynamics(deltaT+(step_size/2), x_temp+(step_size/2)*k2, ctrl_multiplier, gradDensityHandles, c1, c2, c3, c4, p, dyn_p, agent_number, dens_bool);
+    % k3 = deltaT * x_dot3;
+    % 
+    % % Step 4: Compute k4
+    % [x_dot4, ~, ~, ~] = dynamics(deltaT+step_size, x_temp+step_size*k3, ctrl_multiplier, gradDensityHandles, c1, c2, c3, c4, p, dyn_p, agent_number, dens_bool);
+    % k4 = deltaT * x_dot4;
+    % % RK4
+    % x_euler = x_temp + (1/6) * (k1 + 2*k2 + 2*k3 + k4);
+
+    if(unicycle)
+        % Wrap theta to the range [-pi, pi]
+        theta = x_euler(3);
+        theta = atan2(sin(theta), cos(theta));
+        x_euler(3) = theta;
+    end         
+
+    if(isgoal)
         disp(['----- Agent ', num2str(agent_number), ' reached goal -----'])
-        x_euler = x_temp;
-        x_dot = zeros(size(x_temp));
-        u_euler = zeros(2, 1);
     end
 
     % Transpose and return variables

@@ -22,9 +22,9 @@ function [x_dot, u, isgoal, unicycle] = unicycle_multiagent(deltaT, x, ctrl_mult
 
     % Parameters
     rad_from_goal = p.rad_from_goal;
-    saturation_vel = 2;
-    saturation_omega = 1;
-    Kp = 1;
+    saturation_vel = 1;
+    saturation_omega = 10;
+    Kp = 100;
     theta = x(3);
     isgoal = false;
     unicycle = true;
@@ -51,14 +51,14 @@ function [x_dot, u, isgoal, unicycle] = unicycle_multiagent(deltaT, x, ctrl_mult
     if dens_bool
         % Switch control if near the goal
         if norm(x - xd) < rad_from_goal
-            u_hat = -single_int_p.K*(x-xd);
-            % vel = 0;
-            % theta_tilda = 0;
+            u_hat = -single_int_p.K*(x(1:2)-xd(1:2));
+            % u_hat = [0;0];
             isgoal = true;
         else
             u_hat = ctrl_multiplier * grad_density(x, c1, c2, c3, c4);
         end
     else
+        disp('-----------------using navigation functions!!--------------------')
         u_hat = -ctrl_multiplier * grad_phi_f(x);
         
     end
@@ -66,8 +66,8 @@ function [x_dot, u, isgoal, unicycle] = unicycle_multiagent(deltaT, x, ctrl_mult
     theta_tilda = atan2(u_hat(2), u_hat(1));
 
     % Compute state derivatives
-    x1_dot = vel * cos(theta_tilda);
-    x2_dot = vel * sin(theta_tilda);
+    x1_dot = vel * cos(theta);
+    x2_dot = vel * sin(theta);
     
     % Use backstepping to map single integrator control to unicycle model
     theta_tilda_dot = backwardEuler(agent_number, theta_tilda, deltaT);
@@ -80,9 +80,12 @@ function [x_dot, u, isgoal, unicycle] = unicycle_multiagent(deltaT, x, ctrl_mult
 
     % Saturation
     if abs(u(1)) > saturation_vel
+        % disp(['----- Agent ', num2str(agent_number), ' reached vel limits'])
         u(1) = saturation_vel * sign(u(1));
     end
     if abs(u(2)) > saturation_omega
+        % disp(['----- Agent ', num2str(agent_number), ' reached w limits'])
         u(2) = saturation_omega * sign(u(2));
     end
+    % disp(['----- Agent ', num2str(agent_number), ' vel:' ,num2str(u(1))])
 end

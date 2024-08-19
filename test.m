@@ -19,40 +19,19 @@ env_size = 5;
 
 % Square side length
 L = env_size; % Adjust as needed
-offset = 0.1;
+offset = 1;
 
 % Start and goal positions for agents
-nav_p.x01 = [L; L; pi/4];               % Start position for agent 1
-nav_p.xd1 = [-L; -L-offset; pi/4];      % Goal position for agent 1
-
-nav_p.x02 = [-L; -L;3*pi/4];           % Start position for agent 2
-nav_p.xd2 = [L; L+offset; pi/4];      % Goal position for agent 2
-
-nav_p.x03 = [L; -L; -pi/4];             % Start position for agent 3
-nav_p.xd3 = [-L; L; -pi/4];      % Goal position for agent 3
-
-nav_p.x04 = [-L; L; -3*pi/4];           % Start position for agent 4
-nav_p.xd4 = [L; -L; -3*pi/4];    % Goal position for agent 4
-
-% for debuggin
-% nav_p.x01 = [L; L; 0];               % Start position for agent 1
-% nav_p.xd1 = [L; L+10; 0];      % Goal position for agent 1
-% nav_p.x02 = [-L; -L;-pi+0.1];           % Start position for agent 2
-% nav_p.xd2 = [-2*L; -L; -pi];      % Goal position for agent 2
-% nav_p.x03 = [L; -L; 0];             % Start position for agent 3
-% nav_p.xd3 = [L; -L-10; 0];      % Goal position for agent 3
-% nav_p.x04 = [-L; L; 0];           % Start position for agent 4
-% nav_p.xd4 = [-L; L+10; 0];    % Goal position for agent 4
+nav_p.x01 = [L; L; 0];               % Start position for agent 1
+nav_p.xd1 = [L; L+offset; 0];      % Goal position for agent 1
             
 % Obstacle parameters
 nav_p.p = 2; % p-norm for obstacle set
-nav_p.rad_from_goal = 4; % Radius for stopping density feedback control
+nav_p.rad_from_goal = 1; % Radius for stopping density feedback control
 
 % Density function parameters
 nav_p.r11 = 0.5; nav_p.r12 = 2;
-nav_p.r21 = 0.5; nav_p.r22 = 2;
-nav_p.r31 = 0.5; nav_p.r32 = 2;
-nav_p.r41 = 0.5; nav_p.r42 = 2;
+
 
 % Obstacle centers
 nav_p.c0 = 0; % Weaker condition for unsafe set
@@ -66,8 +45,8 @@ gamma = 0; % Post-rotation angle in radians
 nav_p.alpha = 0.2; % Recommended value: 0.2
 
 % Simulation parameters
-M = 20000; % Number of loop iterations
-deltaT = 0.01; % Time step
+M = 1000; % Number of loop iterations
+deltaT = 0.1; % Time step
 ctrl_multiplier = 10; % Control parameter
 
 % Optimization settings
@@ -89,7 +68,7 @@ x_euler = zeros(M, size(nav_p.x01, 1), 4);
 u_euler = zeros(M, 2, 4);
 
 % Initialize temporary state variables
-x_temp = {nav_p.x01, nav_p.x02, nav_p.x03, nav_p.x04};
+x_temp = {nav_p.x01};
 c = x_temp; % Use 'c' to hold current state
 
 % Create function handles for bump functions and gradients
@@ -103,9 +82,9 @@ for iter = 1:M
     end
 
     % Update states and controls for each vehicle
-    for i = 1:4
+    for i = 1:1
         [x_euler(iter, :, i), u_euler(iter, :, i)] = forwardEuler_multiagent(nav_p, deltaT, ctrl_multiplier, ...
-            @unicycle_multiagent, gradDensityHandles, c{1}, c{2}, c{3}, c{4}, single_int_p, x_temp{i}, i);
+            @unicycle_multiagent, gradDensityHandles, c{1}, single_int_p, x_temp{i}, i);
         x_temp{i} = x_euler(iter, :, i)'; % Update temporary state
         c{i} = x_temp{i}; % Update control state
     end
@@ -116,29 +95,18 @@ fig_titles = {'States', 'Velocity', 'Omega'};
 
 % Plot states
 figure();
-for i = 1:4
+for i = 1:1
     subplot(2, 2, i);
-    plot(1:M, squeeze(x_euler(:, 1:2, i)),'-o', 'LineWidth', 2);
-    ylabel('positions');
+    plot(1:M, squeeze(x_euler(:, 1:2, i)), 'LineWidth', 2);
+    ylabel('states');
     xlabel('timesteps');
-    title(sprintf('Agent %d - positions', i));
-    box on;
-end
-
-% plot angles
-figure();
-for i = 1:4
-    subplot(2, 2, i);
-    plot(1:M, squeeze(x_euler(:, 3, i)),'-o', 'LineWidth', 2);
-    ylabel('angles');
-    xlabel('timesteps');
-    title(sprintf('Agent %d - angles', i));
+    title(sprintf('Agent %d - States', i));
     box on;
 end
 
 % Plot velocities
 figure();
-for i = 1:4
+for i = 1:1
     subplot(2, 2, i);
     plot(1:M, squeeze(u_euler(:, 1, i)), 'LineWidth', 2);
     ylabel('velocity');
@@ -149,7 +117,7 @@ end
 
 % Plot omegas
 figure();
-for i = 1:4
+for i = 1:1
     subplot(2, 2, i);
     plot(1:M, squeeze(u_euler(:, 2, i)), 'LineWidth', 2);
     ylabel('omega');
@@ -173,8 +141,8 @@ if save_videos
 end
 
 % Initialize storage for traces
-traces = cell(4, 1);
-for i = 1:4
+traces = cell(1, 1);
+for i = 1:1
     traces{i} = [squeeze(x_euler(1, 1:2, i))]; % Initialize with the first position
 end
 
@@ -190,7 +158,7 @@ for jj = 1:skip_rate:M
     hold on;
     
     % Update and plot traces for each vehicle
-    for i = 1:4
+    for i = 1:1
         % Update trace
         new_position = squeeze(x_euler(jj, 1:2, i)); % Ensure new_position is a row vector
         
@@ -219,7 +187,7 @@ for jj = 1:skip_rate:M
     end
     
     % Plot desired positions
-    for i = 1:4
+    for i = 1:1
         plot(nav_p.(['xd' num2str(i)])(1), nav_p.(['xd' num2str(i)])(2), ...
              sprintf('o%s', colors{i}(1)), 'MarkerSize', 10, 'MarkerFaceColor', colors{i});
     end
@@ -274,59 +242,26 @@ end
 function bumpHandles = createBumpHandles()
     % Define the function handles for each bump
     syms x [2,1] real
-    bump1 = @(nav_p,c1,c2,c3,c4) formPNormBump(nav_p.r21, nav_p.r22, c2, x, nav_p.p, true) ...
-                                  .* formPNormBump(nav_p.r31, nav_p.r32, c3, x, nav_p.p, true) ...
-                                  .* formPNormBump(nav_p.r41, nav_p.r42, c4, x, nav_p.p, true);
-    
-    bump2 = @(nav_p,c1,c2,c3,c4) formPNormBump(nav_p.r11, nav_p.r12, c1, x, nav_p.p, true) ...
-                                  .* formPNormBump(nav_p.r31, nav_p.r32, c3, x, nav_p.p, true) ...
-                                  .* formPNormBump(nav_p.r41, nav_p.r42, c4, x, nav_p.p, true);
-    
-    bump3 = @(nav_p,c1,c2,c3,c4) formPNormBump(nav_p.r11, nav_p.r12, c1, x, nav_p.p, true) ...
-                                  .* formPNormBump(nav_p.r21, nav_p.r22, c2, x, nav_p.p, true) ...
-                                  .* formPNormBump(nav_p.r41, nav_p.r42, c4, x, nav_p.p, true);
-    
-    bump4 = @(nav_p,c1,c2,c3,c4) formPNormBump(nav_p.r11, nav_p.r12, c1, x, nav_p.p, true) ...
-                                  .* formPNormBump(nav_p.r21, nav_p.r22, c2, x, nav_p.p, true) ...
-                                  .* formPNormBump(nav_p.r31, nav_p.r32, c3, x, nav_p.p, true);
-
+    bump1 = @(nav_p,c) formPNormBump(nav_p.r21, nav_p.r22, c, x, nav_p.p, true);
     bumpHandles.bump1Handle = bump1;
-    bumpHandles.bump2Handle = bump2;
-    bumpHandles.bump3Handle = bump3;
-    bumpHandles.bump4Handle = bump4;
 end
 
 %% function to create gradient of density function handles
 function gradDensityHandles = createGradientHandles(nav_p)
-    bumpHandles = createBumpHandles();
-    syms x [2,1] real
+    bumpHandles = createBumpHandles();    syms x [2,1] real
     syms c1 [2,1] real
-    syms c2 [2,1] real
-    syms c3 [2,1] real
-    syms c4 [2,1] real
 
     % form V(x) for each agent
     g1 = 1/norm(x(1:2)-nav_p.xd1(1:2))^(2*nav_p.alpha); 
-    g2 = 1/norm(x(1:2)-nav_p.xd2(1:2))^(2*nav_p.alpha); 
-    g3 = 1/norm(x(1:2)-nav_p.xd3(1:2))^(2*nav_p.alpha);
-    g4 = 1/norm(x(1:2)-nav_p.xd4(1:2))^(2*nav_p.alpha); 
 
     % Compute densities using bump handles
-    grad_density1 = gradient(g1 * bumpHandles.bump1Handle(nav_p,c1,c2,c3,c4),x);
-    grad_density2 = gradient(g2 * bumpHandles.bump2Handle(nav_p,c1,c2,c3,c4),x);
-    grad_density3 = gradient(g3 * bumpHandles.bump3Handle(nav_p,c1,c2,c3,c4),x);
-    grad_density4 = gradient(g4 * bumpHandles.bump4Handle(nav_p,c1,c2,c3,c4),x);
+    % grad_density1 = gradient(g1 * bumpHandles.bump1Handle(nav_p,c1,c2,c3,c4),x);
+    grad_density1 = gradient(g1);
 
     % Create function handles
     optimize = false;
-    grad_density1_sym = matlabFunction(grad_density1, 'File', 'functions/grad_density_f1', 'Vars', {x,c1,c2,c3,c4}, 'Optimize', optimize);
-    grad_density2_sym = matlabFunction(grad_density2, 'File', 'functions/grad_density_f2', 'Vars', {x,c1,c2,c3,c4}, 'Optimize', optimize);
-    grad_density3_sym = matlabFunction(grad_density3, 'File', 'functions/grad_density_f3', 'Vars', {x,c1,c2,c3,c4}, 'Optimize', optimize);
-    grad_density4_sym = matlabFunction(grad_density4, 'File', 'functions/grad_density_f4', 'Vars', {x,c1,c2,c3,c4}, 'Optimize', optimize);
-
+    grad_density1_sym = matlabFunction(grad_density1, 'File', 'functions/grad_density_f1', 'Vars', {x,c1}, 'Optimize', optimize);
+    
     % Compute gradients of densities with respect to x
     gradDensityHandles.grad_density1 = @(x,c1,c2,c3,c4) grad_density1_sym(x,c1,c2,c3,c4);
-    gradDensityHandles.grad_density2 = @(x,c1,c2,c3,c4) grad_density2_sym(x,c1,c2,c3,c4);
-    gradDensityHandles.grad_density3 = @(x,c1,c2,c3,c4) grad_density3_sym(x,c1,c2,c3,c4);
-    gradDensityHandles.grad_density4 = @(x,c1,c2,c3,c4) grad_density4_sym(x,c1,c2,c3,c4);
 end
