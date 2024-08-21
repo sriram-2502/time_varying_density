@@ -16,13 +16,13 @@ addpath('./bump_lib');
 % nav_p.xd4 = [0.5;-3]; % Goal position agebt 3
 
 nav_p.x01 = [0;2]; % Start position agent 1
-nav_p.xd1 = [-0.1;-2]; % Goal position agebt 1
+nav_p.xd1 = [-0.1;-2]; % Goal position agent 1
 nav_p.x02 = [0;-2]; % Start position agent 2
-nav_p.xd2 = [0.1;2]; % Goal position agebt 2
+nav_p.xd2 = [0.1;2]; % Goal position agent 2
 nav_p.x03 = [2;0]; % Start position agent 3
-nav_p.xd3 = [-2;0.1]; % Goal position agebt 3
-nav_p.x04 = [-2;0]; % Start position agent 3
-nav_p.xd4 = [2;-0.1]; % Goal position agebt 3
+nav_p.xd3 = [-2;0.1]; % Goal position agent 3
+nav_p.x04 = [-2;0]; % Start position agent 4
+nav_p.xd4 = [2;-0.1]; % Goal position agent 4
 
 nav_p.p = 2; % Generate obstacle set off p-norm
 

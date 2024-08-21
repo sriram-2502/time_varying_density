@@ -12,6 +12,13 @@ addpath('./bump_lib');
 clear backwardEuler
 clear forwardEuler
 
+colors = colororder;
+blue = colors(1,:);
+red = colors(2,:);
+yellow = colors(3,:);
+purple = colors(4,:);
+green = colors(5,:);
+
 %% Problem Setup
 
 % Environment size
@@ -23,16 +30,16 @@ offset = 0.1;
 
 % Start and goal positions for agents
 nav_p.x01 = [L; L; pi/4];               % Start position for agent 1
-nav_p.xd1 = [-L; -L-offset; pi/4];      % Goal position for agent 1
+nav_p.xd1 = [-L-offset; -L; pi/4];      % Goal position for agent 1
 
 nav_p.x02 = [-L; -L;3*pi/4];           % Start position for agent 2
 nav_p.xd2 = [L; L+offset; pi/4];      % Goal position for agent 2
 
 nav_p.x03 = [L; -L; -pi/4];             % Start position for agent 3
-nav_p.xd3 = [-L; L; -pi/4];      % Goal position for agent 3
+nav_p.xd3 = [-L; L+offset; -pi/4];      % Goal position for agent 3
 
 nav_p.x04 = [-L; L; -3*pi/4];           % Start position for agent 4
-nav_p.xd4 = [L; -L; -3*pi/4];    % Goal position for agent 4
+nav_p.xd4 = [L; -L-offset; -3*pi/4];    % Goal position for agent 4
 
 % for debuggin
 % nav_p.x01 = [L; L; 0];               % Start position for agent 1
@@ -118,7 +125,7 @@ fig_titles = {'States', 'Velocity', 'Omega'};
 figure();
 for i = 1:4
     subplot(2, 2, i);
-    plot(1:M, squeeze(x_euler(:, 1:2, i)),'-o', 'LineWidth', 2);
+    plot(1:M, squeeze(x_euler(:, 1:2, i)),'-', 'LineWidth', 2);
     ylabel('positions');
     xlabel('timesteps');
     title(sprintf('Agent %d - positions', i));
@@ -129,7 +136,7 @@ end
 figure();
 for i = 1:4
     subplot(2, 2, i);
-    plot(1:M, squeeze(x_euler(:, 3, i)),'-o', 'LineWidth', 2);
+    plot(1:M, squeeze(x_euler(:, 3, i)),'-', 'LineWidth', 2);
     ylabel('angles');
     xlabel('timesteps');
     title(sprintf('Agent %d - angles', i));
@@ -158,10 +165,110 @@ for i = 1:4
     box on;
 end
 
+%%
+% Define colors using colororder
+colors = colororder;
+blue = colors(1, :);
+red = colors(2, :);
+green = colors(3, :);
+purple = colors(4, :);
+
+% Assign these colors to your traces and plot elements
+color_map = {blue, red, green, purple};
+
+% Define the time steps for the snapshots and their corresponding trail lengths
+snapshot_times = [3000, 7000, 8500, 9500]; % Time steps for snapshots
+trail_lengths = [2000, 4000, 1500, 1000]; % Trail lengths corresponding to each snapshot
+
+% Define the figure and subplot layout
+figure;
+subplot_positions = [1, 2, 5, 6]; % Subplot positions for 2x4 grid
+
+% Loop over the snapshots
+for idx = 1:length(snapshot_times)
+    jj = snapshot_times(idx); % Current time step for the snapshot
+    trace_length = trail_lengths(idx); % Get the trail length for the current snapshot
+    
+    % Define the subplot position
+    subplot(2, 4, subplot_positions(idx)); % Create subplot
+    
+    % Ensure the figure is cleared for the new plot
+    hold off;
+    cla;
+    hold on;
+    box on;
+
+    % Update and plot traces for each vehicle
+    for i = 1:4
+        % Ensure we are within bounds
+        if jj <= size(x_euler, 1)
+            % Update trace for the current snapshot
+            new_position = squeeze(x_euler(jj, 1:2, i));
+            % Get the historical positions up to the current snapshot
+            trace_start = max(1, jj-trace_length+1);
+            historical_positions = squeeze(x_euler(trace_start:jj, 1:2, i));
+            
+            % Plot the start position as a solid marker
+            plot(nav_p.(['x0' num2str(i)])(1), nav_p.(['x0' num2str(i)])(2), ...
+             'o', 'MarkerSize', 10, 'MarkerFaceColor', color_map{i}, 'MarkerEdgeColor', color_map{i});
+
+             % Plot the goal position as a dashed circle
+            theta_fill = linspace(0, 2*pi, 100);
+            x_fill = 1 * nav_p.(['r' num2str(i) '1']) * cos(theta_fill) + nav_p.(['xd' num2str(i)])(1);
+            y_fill = 1 * nav_p.(['r' num2str(i) '1']) * sin(theta_fill) + nav_p.(['xd' num2str(i)])(2);
+            plot(x_fill, y_fill, '-', 'Color', color_map{i}, 'LineWidth', 2);
+
+            % Plot traces
+            plot(historical_positions(:, 1), historical_positions(:, 2), '--', 'Color', color_map{i}, 'LineWidth', 2);
+
+            % Plot the current position with the heading direction
+            plotCircleAndHeading(new_position(1), ...
+                                 new_position(2), ...
+                                 squeeze(x_euler(jj, 3, i)), ...
+                                 nav_p.(['r' num2str(i) '1']), ...
+                                 nav_p.(['r' num2str(i) '2']), ...
+                                 color_map{i});
+        end
+    end
+
+    % Set plot properties
+    xlim([-env_size-2, env_size+2]);
+    ylim([-env_size-2, env_size+2]);
+    axis square;
+    set(gca, 'LineWidth', 2, 'FontSize', 20); % Box line width and font size
+
+     % Add x-ticks for bottom two snapshots
+    if idx == 3 || idx == 4
+        set(gca, 'XTick', linspace(-env_size, env_size, 3)); % Customize x-ticks as needed
+    else
+        set(gca, 'XTick', []); % Remove x-ticks for other snapshots
+    end
+    
+    % Add y-ticks for left two snapshots
+    if idx == 1 || idx == 3
+        set(gca, 'YTick', linspace(-env_size, env_size, 3)); % Customize y-ticks as needed
+    else
+        set(gca, 'YTick', []); % Remove y-ticks for other snapshots
+    end
+
+    % % Add legend only to the first subplot
+    % if idx == 1
+    %     % Dummy plot entries for the legend
+    %     plot(nan, nan, 'o', 'MarkerSize', 10, 'MarkerFaceColor', 'k', 'MarkerEdgeColor', 'k'); % Dummy start marker
+    %     plot(nan, nan, 'o', 'MarkerSize', 10, 'MarkerFaceColor', 'k', 'MarkerEdgeColor', 'k', 'LineStyle', 'none'); % Dummy goal circle
+    %     plot(nan, nan, '--', 'Color', 'k', 'LineWidth', 1.5); % Dummy trace
+    % 
+    %     legend('Start', 'Goal', 'Trajectory', 'Location', 'best');
+    % end
+end
+
+% Adjust layout for better spacing
+set(gcf, 'Position', [100, 100, 1200, 600]);
+
 %% Animation Setup
 skip_rate = 10;
 save_videos = true;
-trace_length = 50; % Number of recent positions to keep in the trace
+trace_length = 100; % Number of recent positions to keep in the trace
 
 % Define the video file path and name
 video_file_path = 'animations/scenario.mp4'; % Adjust path if necessary
@@ -175,11 +282,18 @@ end
 % Initialize storage for traces
 traces = cell(4, 1);
 for i = 1:4
-    traces{i} = [squeeze(x_euler(1, 1:2, i))]; % Initialize with the first position
+    traces{i} = squeeze(x_euler(1, 1:2, i)); % Initialize with the first position
 end
 
-% Define colors for each vehicle
-colors = {'red', 'green', 'blue', 'magenta'};
+% Define colors using colororder
+colors = colororder;
+blue = colors(1, :);
+red = colors(2, :);
+green = colors(3, :);
+purple = colors(4, :);
+
+% Assign these colors to your traces and plot elements
+color_map = {blue, red, green, purple};
 
 % Animation loop
 for jj = 1:skip_rate:M
@@ -209,10 +323,10 @@ for jj = 1:skip_rate:M
                                  squeeze(x_euler(jj, 3, i)), ...
                                  nav_p.(['r' num2str(i) '1']), ...
                                  nav_p.(['r' num2str(i) '2']), ...
-                                 colors{i});
+                                 color_map{i});
                              
             % Plot trace
-            plot(traces{i}(:, 1), traces{i}(:, 2), sprintf('%s-o', colors{i}), 'LineWidth', 1.5);
+            plot(traces{i}(:, 1), traces{i}(:, 2), '--', 'Color', color_map{i}, 'LineWidth', 2);
         else
             warning('new_position dimensions do not match the expected size.');
         end
@@ -221,13 +335,12 @@ for jj = 1:skip_rate:M
     % Plot desired positions
     for i = 1:4
         plot(nav_p.(['xd' num2str(i)])(1), nav_p.(['xd' num2str(i)])(2), ...
-             sprintf('o%s', colors{i}(1)), 'MarkerSize', 10, 'MarkerFaceColor', colors{i});
+             'o', 'MarkerSize', 10, 'MarkerFaceColor', color_map{i}, 'Color', color_map{i});
     end
     
     % Set plot properties
-    title('Multiagent Obstacle Avoidance');
     box on;
-    set(gca, 'XTick', [], 'YTick', []);
+    set(gca, 'XTick', [], 'YTick', [], 'LineWidth', 2, 'FontSize', 20); % Box line width and font size
     axis square;
     axis tight;
     xlim([-env_size-2, env_size+2]);
@@ -235,7 +348,7 @@ for jj = 1:skip_rate:M
     
     % Add timestamp
     timestamp = sprintf('Time: %0.2f s', deltaT * jj);
-    text(0.6, 0.1, timestamp, 'Units', 'normalized');
+    text(0.3, 0.1, timestamp, 'Units', 'normalized', 'FontSize', 12);
     
     % Write frame to video if saving
     if save_videos
@@ -249,6 +362,7 @@ if save_videos
     close(vidFile);
 end
 
+
 %% Function to Plot Circle, Heading Line, and Sensing Region
 function plotCircleAndHeading(x, y, theta, r1, r2, color)
     % Plot the sensing region as a filled circle with transparency
@@ -257,16 +371,18 @@ function plotCircleAndHeading(x, y, theta, r1, r2, color)
     y_fill = r2 * sin(theta_fill) + y;
     fill(x_fill, y_fill, color, 'FaceAlpha', 0.3, 'EdgeColor', 'none');
 
-    % Plot the robot's circle
-    rectangle('Position', [x-r1, y-r1, 2*r1, 2*r1], ...
-              'Curvature', [1, 1], 'EdgeColor', color, 'LineWidth', 1.5);
+    % Plot the robot's circle as a filled circle with transparency
+    theta_robot = linspace(0, 2*pi, 100);
+    x_robot = r1 * cos(theta_robot) + x;
+    y_robot = r1 * sin(theta_robot) + y;
+    fill(x_robot, y_robot, color, 'FaceAlpha', 0.6, 'EdgeColor', 'black', 'LineWidth',2);
 
     % Compute the end point of the heading line
     line_end_x = x + 1.5 * r1 * cos(theta);
     line_end_y = y + 1.5 * r1 * sin(theta);
 
     % Plot the heading line
-    plot([x, line_end_x], [y, line_end_y], 'Color', color, 'LineWidth', 1.5);
+    plot([x, line_end_x], [y, line_end_y], 'Color', 'black', 'LineWidth', 2);
 end
 
 
