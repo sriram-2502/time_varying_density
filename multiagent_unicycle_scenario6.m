@@ -8,47 +8,46 @@ addpath('./utils');
 addpath('dynamics-control');
 addpath('./bump_lib');
 
-% clear persistant values
-clear backwardEuler
-clear forwardEuler
-
-colors = colororder;
-blue = colors(1,:);
-red = colors(2,:);
-yellow = colors(3,:);
-purple = colors(4,:);
-green = colors(5,:);
-
 %% Problem Setup
 
 % Environment size
-num_agents = 3;
+env_size = 5;
+
+% Square side length
+L = env_size; % Adjust as needed
+offset = 0.1;
+num_agents = 6;
 
 % Start and goal positions for agents
-nav_p.x01 = [-9; -1; 0];               % Start position for agent 1
-nav_p.xd1 = [9; -1; 0];      % Goal position for agent 1
+nav_p.x01 = [L; L; pi/4];               % Start position for agent 1
+nav_p.xd1 = [-L-offset; -L; pi/4];      % Goal position for agent 1
 
-nav_p.x02 = [-9; 1;0];           % Start position for agent 2
-nav_p.xd2 = [9; 1; 0];      % Goal position for agent 2
+nav_p.x02 = [-L; -L;3*pi/4];            % Start position for agent 2
+nav_p.xd2 = [L; L+offset; pi/4];        % Goal position for agent 2
 
-nav_p.x03 = [0; 0;-pi];             % Start position for agent 3
-nav_p.xd3 = [-16; 0; -pi];      % Goal position for agent 3
+nav_p.x03 = [L; -L; -pi/4];             % Start position for agent 3
+nav_p.xd3 = [-L; L+offset; -pi/4];      % Goal position for agent 3
+
+nav_p.x04 = [-L; L; -3*pi/4];           % Start position for agent 4
+nav_p.xd4 = [L; -L-offset; -3*pi/4];    % Goal position for agent 4
+
+nav_p.x05 = [0;L; -pi/2];               % Start position agent 5
+nav_p.xd5 = [-offset;-L; -pi/2];        % Goal position agent 5
+
+nav_p.x06 = [0;-L; pi/2];               % Start position agent 6
+nav_p.xd6 = [offset;L;  pi/2];          % Goal position agent 6
             
 % Obstacle parameters
 nav_p.p = 2; % p-norm for obstacle set
 nav_p.rad_from_goal = 4; % Radius for stopping density feedback control
 
 % Density function parameters
-% nav_p.r11 = 1; nav_p.r12 = 3;
-% nav_p.r21 = 1; nav_p.r22 = 3;
-% nav_p.r31 = 0.5; nav_p.r32 = 2;
-% nav_p.r41 = 0.5; nav_p.r42 = 2;
-
-% Density function parameters
-% self raidus is 0.75 so enlareged radius is 1.5
-nav_p.r11 = 1.5; nav_p.r12 = 3;
-nav_p.r21 = 1.5; nav_p.r22 = 3;
-nav_p.r31 = 1.5; nav_p.r32 = 3;
+nav_p.r11 = 0.5; nav_p.r12 = 2;
+nav_p.r21 = 0.5; nav_p.r22 = 2;
+nav_p.r31 = 0.5; nav_p.r32 = 2;
+nav_p.r41 = 0.5; nav_p.r42 = 2;
+nav_p.r51 = 0.5; nav_p.r52 = 2;
+nav_p.r61 = 0.5; nav_p.r62 = 2;
 
 
 % Obstacle centers
@@ -67,45 +66,41 @@ M = 20000; % Number of loop iterations
 deltaT = 0.01; % Time step
 ctrl_multiplier = 10; % Control parameter
 
-% Optimization settings
-vpa_enable = true;
-if vpa_enable
-    optimize = false; % Set to false for faster symbolic tool generation
-end
-
-% Density Function Formulation
+%% Density Function Formulation
 syms x [2,1] real
 [A, A_inv] = transformationMatrix(theta, stretch, 2);
 
+% Create function handles for bump functions and gradients
+bumpHandles = createBumpHandles();
+gradDensityHandles = createGradientHandles(nav_p);
 
 %% Form System Matrices and LQR Gain
 [single_int_p, dbl_int_p] = generateStateSpace(deltaT, x);
 
 % Initialize state and control arrays
 x_euler = zeros(M, size(nav_p.x01, 1), num_agents);
-x_euler(1,1:size(nav_p.x01, 1),1) = nav_p.x01;
-x_euler(1,1:size(nav_p.x02, 1),2) = nav_p.x02;
-x_euler(1,1:size(nav_p.x03, 1),3) = nav_p.x03;
 u_euler = zeros(M, 2, num_agents);
 
 % Initialize temporary state variables
-x_temp = {nav_p.x01, nav_p.x02, nav_p.x03};
+x_temp = {nav_p.x01, nav_p.x02, nav_p.x03, nav_p.x04, ...
+            nav_p.x05, nav_p.x06};
 c = x_temp; % Use 'c' to hold current state
 
-% Create function handles for bump functions and gradients
-bumpHandles = createBumpHandles();
-gradDensityHandles = createGradientHandles(nav_p);
+%% Simulation loop
 
-% Simulation loop
-for iter = 2:M
+% clear persistant values
+clear backwardEuler
+clear forwardEuler
+
+for iter = 1:M
     if mod(iter, 1) == 0
         disp(['iter:', num2str(iter)]);
     end
 
     % Update states and controls for each vehicle
     for i = 1:num_agents
-        [x_euler(iter, :, i), u_euler(iter, :, i)] = forwardEuler_multiagent_vs_SFM(nav_p, deltaT, ctrl_multiplier, ...
-            @unicycle_multiagent_vs_SFM, gradDensityHandles, c{1}, c{2}, c{3}, single_int_p, x_temp{i}, i);
+        [x_euler(iter, :, i), u_euler(iter, :, i)] = forwardEuler_multiagent_scenario6(nav_p, deltaT, ctrl_multiplier, ...
+            @unicycle_multiagent_scenario6, gradDensityHandles, c{1}, c{2}, c{3}, c{4}, c{5}, c{6}, single_int_p, x_temp{i}, i);
         x_temp{i} = x_euler(iter, :, i)'; % Update temporary state
         c{i} = x_temp{i}; % Update control state
     end
@@ -117,7 +112,7 @@ fig_titles = {'States', 'Velocity', 'Omega'};
 % Plot states
 figure();
 for i = 1:num_agents
-    subplot(2, 2, i);
+    subplot(2, num_agents/2, i);
     plot(1:M, squeeze(x_euler(:, 1:2, i)),'-', 'LineWidth', 2);
     ylabel('positions');
     xlabel('timesteps');
@@ -128,7 +123,7 @@ end
 % plot angles
 figure();
 for i = 1:num_agents
-    subplot(2, 2, i);
+    subplot(2, num_agents/2, i);
     plot(1:M, squeeze(x_euler(:, 3, i)),'-', 'LineWidth', 2);
     ylabel('angles');
     xlabel('timesteps');
@@ -139,7 +134,7 @@ end
 % Plot velocities
 figure();
 for i = 1:num_agents
-    subplot(2, 2, i);
+    subplot(2, num_agents/2, i);
     plot(1:M, squeeze(u_euler(:, 1, i)), 'LineWidth', 2);
     ylabel('velocity');
     xlabel('timesteps');
@@ -150,7 +145,7 @@ end
 % Plot omegas
 figure();
 for i = 1:num_agents
-    subplot(2, 2, i);
+    subplot(2, num_agents/2, i);
     plot(1:M, squeeze(u_euler(:, 2, i)), 'LineWidth', 2);
     ylabel('omega');
     xlabel('timesteps');
@@ -165,13 +160,19 @@ blue = colors(1, :);
 red = colors(2, :);
 yellow = colors(3, :);
 purple = colors(4, :);
+green = colors(5, :);
+xxx = colors(6, :);
 
 % Assign these colors to your traces and plot elements
-color_map = {blue, red, yellow};
+color_map = {blue, red, yellow, purple, green, xxx};
 
 % Define the time steps for the snapshots and their corresponding trail lengths
-snapshot_times = [1, 5000, 7000, 12500]; % Time steps for snapshots
-trail_lengths = [2000, 2000, 2000, 6000]; % Trail lengths corresponding to each snapshot
+snapshot_times = [1000, 3000, 7000, 9000]; % Time steps for snapshots
+trail_lengths = [2000, 2000, 4000, 2500]; % Trail lengths corresponding to each snapshot
+
+% %settings for scenario 6_2
+% snapshot_times = [1000, 4000, 7000, 10000]; % Time steps for snapshots
+% trail_lengths = [2000, 2000, 2800, 3000]; % Trail lengths corresponding to each snapshot
 
 % Define the figure and subplot layout
 figure;
@@ -228,24 +229,24 @@ for idx = 1:length(snapshot_times)
     end
 
     % Set plot properties
-    xlim([-20, 10]);
-    ylim([-2,2]);
-    % axis square;
+    xlim([-env_size-2, env_size+2]);
+    ylim([-env_size-2, env_size+2]);
+    axis square;
     set(gca, 'LineWidth', 2, 'FontSize', 20); % Box line width and font size
 
-    %  % Add x-ticks for bottom two snapshots
-    % if idx == 3 || idx == 4
-    %     set(gca, 'XTick', linspace(-env_size, env_size, 3)); % Customize x-ticks as needed
-    % else
-    %     set(gca, 'XTick', []); % Remove x-ticks for other snapshots
-    % end
+     % Add x-ticks for bottom two snapshots
+    if idx == 3 || idx == 4
+        set(gca, 'XTick', linspace(-env_size, env_size, 3)); % Customize x-ticks as needed
+    else
+        set(gca, 'XTick', []); % Remove x-ticks for other snapshots
+    end
     
-    % % Add y-ticks for left two snapshots
-    % if idx == 1 || idx == 3
-    %     set(gca, 'YTick', linspace(-env_size, env_size, 3)); % Customize y-ticks as needed
-    % else
-    %     set(gca, 'YTick', []); % Remove y-ticks for other snapshots
-    % end
+    % Add y-ticks for left two snapshots
+    if idx == 1 || idx == 3
+        set(gca, 'YTick', linspace(-env_size, env_size, 3)); % Customize y-ticks as needed
+    else
+        set(gca, 'YTick', []); % Remove y-ticks for other snapshots
+    end
 
     % Add dummy subplot for legend
     subplot(2,4,3)
@@ -255,7 +256,6 @@ for idx = 1:length(snapshot_times)
     plot(nan, nan, '--', 'Color', 'k', 'LineWidth', 2); % Dummy trace
 
     legend('Start', 'Goal', 'Trajectory', 'Location', 'best');
-
 end
 
 % Adjust layout for better spacing
@@ -267,7 +267,7 @@ save_videos = true;
 trace_length = 100; % Number of recent positions to keep in the trace
 
 % Define the video file path and name
-video_file_path = 'animations/scenario.mp4'; % Adjust path if necessary
+video_file_path = 'animations/scenario3.mp4'; % Adjust path if necessary
 
 if save_videos
     vidFile = VideoWriter(video_file_path, 'MPEG-4');
@@ -287,9 +287,11 @@ blue = colors(1, :);
 red = colors(2, :);
 yellow = colors(3, :);
 purple = colors(4, :);
+green = colors(5, :);
+xxx = colors(6, :);
 
 % Assign these colors to your traces and plot elements
-color_map = {blue, red, yellow, purple};
+color_map = {blue, red, yellow, purple, green, xxx};
 
 % Animation loop
 for jj = 1:skip_rate:M
@@ -298,11 +300,18 @@ for jj = 1:skip_rate:M
     clf(f1);
     set(f1, 'Color', 'white');
     hold on;
-    
+
     % Plot desired positions
     for i = 1:num_agents
-        plot(nav_p.(['xd' num2str(i)])(1), nav_p.(['xd' num2str(i)])(2), ...
-             'o', 'MarkerSize', 10, 'MarkerFaceColor', color_map{i}, 'Color', color_map{i});
+        % Plot the start position as a solid marker
+        plot(nav_p.(['x0' num2str(i)])(1), nav_p.(['x0' num2str(i)])(2), ...
+         'o', 'MarkerSize', 10, 'MarkerFaceColor', color_map{i}, 'MarkerEdgeColor', color_map{i});
+
+        % Plot the goal position as a dashed circle
+        theta_fill = linspace(0, 2*pi, 100);
+        x_fill = 1 * nav_p.(['r' num2str(i) '1']) * cos(theta_fill) + nav_p.(['xd' num2str(i)])(1);
+        y_fill = 1 * nav_p.(['r' num2str(i) '1']) * sin(theta_fill) + nav_p.(['xd' num2str(i)])(2);
+        plot(x_fill, y_fill, '-', 'Color', color_map{i}, 'LineWidth', 2);
     end
 
     % Update and plot traces for each vehicle
@@ -323,8 +332,8 @@ for jj = 1:skip_rate:M
             plotCircleAndHeading(squeeze(x_euler(jj, 1, i)), ...
                                  squeeze(x_euler(jj, 2, i)), ...
                                  squeeze(x_euler(jj, 3, i)), ...
-                                 nav_p.(['r' num2str(i) '1'])/2, ...
-                                 nav_p.(['r' num2str(i) '2'])/2, ...
+                                 nav_p.(['r' num2str(i) '1']), ...
+                                 nav_p.(['r' num2str(i) '2']), ...
                                  color_map{i});
                              
             % Plot trace
@@ -337,14 +346,14 @@ for jj = 1:skip_rate:M
     % Set plot properties
     box on;
     set(gca, 'XTick', [], 'YTick', [], 'LineWidth', 2, 'FontSize', 20); % Box line width and font size
-    axis square
+    axis square;
     axis tight;
-    xlim([-20, 10]);
-    ylim([-20, 20]);
+    xlim([-env_size-2, env_size+2]);
+    ylim([-env_size-2, env_size+2]);
     
     % Add timestamp
     timestamp = sprintf('Time: %0.2f s', deltaT * jj);
-    text(0.3, 0.1, timestamp, 'Units', 'normalized', 'FontSize', 12);
+    text(0.35, 0.05, timestamp, 'Units', 'normalized', 'FontSize', 12);
     
     % Write frame to video if saving
     if save_videos
@@ -386,20 +395,49 @@ end
 function bumpHandles = createBumpHandles()
     % Define the function handles for each bump
     syms x [2,1] real
-    bump1 = @(nav_p,c1,c2,c3) formPNormBump(nav_p.r21, nav_p.r22, c2, x, nav_p.p, true) ...
-                                  .* formPNormBump(nav_p.r31, nav_p.r32, c3, x, nav_p.p, true);
-    
-    bump2 = @(nav_p,c1,c2,c3) formPNormBump(nav_p.r11, nav_p.r12, c1, x, nav_p.p, true) ...
-                                  .* formPNormBump(nav_p.r31, nav_p.r32, c3, x, nav_p.p, true);
-    
-    bump3 = @(nav_p,c1,c2,c3) formPNormBump(nav_p.r11, nav_p.r12, c1, x, nav_p.p, true) ...
-                                  .* formPNormBump(nav_p.r21, nav_p.r22, c2, x, nav_p.p, true);
-
-    
+    bump1 = @(nav_p,c1,c2,c3,c4,c5,c6) formPNormBump(nav_p.r21, nav_p.r22, c2, x, nav_p.p, true) ...
+                                  .* formPNormBump(nav_p.r31, nav_p.r32, c3, x, nav_p.p, true) ...
+                                  .* formPNormBump(nav_p.r41, nav_p.r42, c4, x, nav_p.p, true) ...
+                                  .* formPNormBump(nav_p.r51, nav_p.r52, c5, x, nav_p.p, true) ...
+                                  .* formPNormBump(nav_p.r61, nav_p.r62, c6, x, nav_p.p, true); ...
+                                     
+    bump2 = @(nav_p,c1,c2,c3,c4,c5,c6) formPNormBump(nav_p.r11, nav_p.r12, c1, x, nav_p.p, true) ...
+                                  .* formPNormBump(nav_p.r31, nav_p.r32, c3, x, nav_p.p, true) ...
+                                  .* formPNormBump(nav_p.r41, nav_p.r42, c4, x, nav_p.p, true) ...
+                                  .* formPNormBump(nav_p.r51, nav_p.r52, c5, x, nav_p.p, true) ...
+                                  .* formPNormBump(nav_p.r61, nav_p.r62, c6, x, nav_p.p, true); ...
+                     
+    bump3 = @(nav_p,c1,c2,c3,c4,c5,c6) formPNormBump(nav_p.r11, nav_p.r12, c1, x, nav_p.p, true) ...
+                                  .* formPNormBump(nav_p.r21, nav_p.r22, c2, x, nav_p.p, true) ...
+                                  .* formPNormBump(nav_p.r41, nav_p.r42, c4, x, nav_p.p, true) ...
+                                  .* formPNormBump(nav_p.r51, nav_p.r52, c5, x, nav_p.p, true) ...
+                                  .* formPNormBump(nav_p.r61, nav_p.r62, c6, x, nav_p.p, true); ...
+                            
+    bump4 = @(nav_p,c1,c2,c3,c4,c5,c6) formPNormBump(nav_p.r11, nav_p.r12, c1, x, nav_p.p, true) ...
+                                  .* formPNormBump(nav_p.r21, nav_p.r22, c2, x, nav_p.p, true) ...
+                                  .* formPNormBump(nav_p.r31, nav_p.r32, c3, x, nav_p.p, true) ...
+                                  .* formPNormBump(nav_p.r51, nav_p.r52, c5, x, nav_p.p, true) ...
+                                  .* formPNormBump(nav_p.r61, nav_p.r62, c6, x, nav_p.p, true); ...              
+    bump5 = @(nav_p,c1,c2,c3,c4,c5,c6) formPNormBump(nav_p.r11, nav_p.r12, c1, x, nav_p.p, true) ...
+                                  .* formPNormBump(nav_p.r21, nav_p.r22, c2, x, nav_p.p, true) ...
+                                  .* formPNormBump(nav_p.r31, nav_p.r32, c3, x, nav_p.p, true) ...
+                                  .* formPNormBump(nav_p.r41, nav_p.r42, c4, x, nav_p.p, true) ...
+                                  .* formPNormBump(nav_p.r61, nav_p.r62, c6, x, nav_p.p, true); ...
+                            
+    bump6 = @(nav_p,c1,c2,c3,c4,c5,c6) formPNormBump(nav_p.r11, nav_p.r12, c1, x, nav_p.p, true) ...
+                                  .* formPNormBump(nav_p.r21, nav_p.r22, c2, x, nav_p.p, true) ...
+                                  .* formPNormBump(nav_p.r31, nav_p.r32, c3, x, nav_p.p, true) ...
+                                  .* formPNormBump(nav_p.r41, nav_p.r42, c4, x, nav_p.p, true) ...
+                                  .* formPNormBump(nav_p.r51, nav_p.r52, c5, x, nav_p.p, true); ...
+              
 
     bumpHandles.bump1Handle = bump1;
     bumpHandles.bump2Handle = bump2;
     bumpHandles.bump3Handle = bump3;
+    bumpHandles.bump4Handle = bump4;
+    bumpHandles.bump5Handle = bump5;
+    bumpHandles.bump6Handle = bump6;
+
 end
 
 %% function to create gradient of density function handles
@@ -409,25 +447,40 @@ function gradDensityHandles = createGradientHandles(nav_p)
     syms c1 [2,1] real
     syms c2 [2,1] real
     syms c3 [2,1] real
+    syms c4 [2,1] real
+    syms c5 [2,1] real
+    syms c6 [2,1] real
 
     % form V(x) for each agent
     g1 = 1/norm(x(1:2)-nav_p.xd1(1:2))^(2*nav_p.alpha); 
     g2 = 1/norm(x(1:2)-nav_p.xd2(1:2))^(2*nav_p.alpha); 
     g3 = 1/norm(x(1:2)-nav_p.xd3(1:2))^(2*nav_p.alpha);
+    g4 = 1/norm(x(1:2)-nav_p.xd4(1:2))^(2*nav_p.alpha); 
+    g5 = 1/norm(x(1:2)-nav_p.xd5(1:2))^(2*nav_p.alpha); 
+    g6 = 1/norm(x(1:2)-nav_p.xd6(1:2))^(2*nav_p.alpha); 
 
     % Compute densities using bump handles
-    grad_density1 = gradient(g1 * bumpHandles.bump1Handle(nav_p,c1,c2,c3),x);
-    grad_density2 = gradient(g2 * bumpHandles.bump2Handle(nav_p,c1,c2,c3),x);
-    grad_density3 = gradient(g3 * bumpHandles.bump3Handle(nav_p,c1,c2,c3),x);
+    grad_density1 = gradient(g1 * bumpHandles.bump1Handle(nav_p,c1,c2,c3,c4,c5,c6),x);
+    grad_density2 = gradient(g2 * bumpHandles.bump2Handle(nav_p,c1,c2,c3,c4,c5,c6),x);
+    grad_density3 = gradient(g3 * bumpHandles.bump3Handle(nav_p,c1,c2,c3,c4,c5,c6),x);
+    grad_density4 = gradient(g4 * bumpHandles.bump4Handle(nav_p,c1,c2,c3,c4,c5,c6),x);
+    grad_density5 = gradient(g5 * bumpHandles.bump5Handle(nav_p,c1,c2,c3,c4,c5,c6),x);
+    grad_density6 = gradient(g6 * bumpHandles.bump6Handle(nav_p,c1,c2,c3,c4,c5,c6),x);
 
     % Create function handles
-    optimize = false;
-    grad_density1_sym = matlabFunction(grad_density1, 'File', 'functions/grad_density_f1', 'Vars', {x,c1,c2,c3}, 'Optimize', optimize);
-    grad_density2_sym = matlabFunction(grad_density2, 'File', 'functions/grad_density_f2', 'Vars', {x,c1,c2,c3}, 'Optimize', optimize);
-    grad_density3_sym = matlabFunction(grad_density3, 'File', 'functions/grad_density_f3', 'Vars', {x,c1,c2,c3}, 'Optimize', optimize);
-
+    optimize = true;
+    grad_density1_sym = matlabFunction(grad_density1, 'File', 'functions/grad_density_f1', 'Vars', {x,c1,c2,c3,c4,c5,c6}, 'Optimize', optimize);
+    grad_density2_sym = matlabFunction(grad_density2, 'File', 'functions/grad_density_f2', 'Vars', {x,c1,c2,c3,c4,c5,c6}, 'Optimize', optimize);
+    grad_density3_sym = matlabFunction(grad_density3, 'File', 'functions/grad_density_f3', 'Vars', {x,c1,c2,c3,c4,c5,c6}, 'Optimize', optimize);
+    grad_density4_sym = matlabFunction(grad_density4, 'File', 'functions/grad_density_f4', 'Vars', {x,c1,c2,c3,c4,c5,c6}, 'Optimize', optimize);
+    grad_density5_sym = matlabFunction(grad_density5, 'File', 'functions/grad_density_f5', 'Vars', {x,c1,c2,c3,c4,c5,c6}, 'Optimize', optimize);
+    grad_density6_sym = matlabFunction(grad_density6, 'File', 'functions/grad_density_f6', 'Vars', {x,c1,c2,c3,c4,c5,c6}, 'Optimize', optimize);
+   
     % Compute gradients of densities with respect to x
-    gradDensityHandles.grad_density1 = @(x,c1,c2,c3) grad_density1_sym(x,c1,c2,c3);
-    gradDensityHandles.grad_density2 = @(x,c1,c2,c3) grad_density2_sym(x,c1,c2,c3);
-    gradDensityHandles.grad_density3 = @(x,c1,c2,c3) grad_density3_sym(x,c1,c2,c3);
+    gradDensityHandles.grad_density1 = @(x,c1,c2,c3,c4,c5,c6) grad_density1_sym(x,c1,c2,c3,c4,c5,c6);
+    gradDensityHandles.grad_density2 = @(x,c1,c2,c3,c4,c5,c6) grad_density2_sym(x,c1,c2,c3,c4,c5,c6);
+    gradDensityHandles.grad_density3 = @(x,c1,c2,c3,c4,c5,c6) grad_density3_sym(x,c1,c2,c3,c4,c5,c6);
+    gradDensityHandles.grad_density4 = @(x,c1,c2,c3,c4,c5,c6) grad_density4_sym(x,c1,c2,c3,c4,c5,c6);
+    gradDensityHandles.grad_density5 = @(x,c1,c2,c3,c4,c5,c6) grad_density5_sym(x,c1,c2,c3,c4,c5,c6);
+    gradDensityHandles.grad_density6 = @(x,c1,c2,c3,c4,c5,c6) grad_density6_sym(x,c1,c2,c3,c4,c5,c6);
 end

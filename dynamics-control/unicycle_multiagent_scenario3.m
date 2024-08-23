@@ -1,4 +1,4 @@
-function [x_dot, u, isgoal, unicycle] = unicycle_multiagent(deltaT, x, ctrl_multiplier, gradDensityHandles, c1, c2, c3, p, single_int_p, agent_number, dens_bool)
+function [x_dot, u, isgoal, unicycle] = unicycle_multiagent_vs_SFM(deltaT, x, ctrl_multiplier, gradDensityHandles, c1, c2, c3, p, single_int_p, agent_number, dens_bool)
     % Propagates the kinematic model with a control and updates with LQR control
     % Inputs:
     %   deltaT              : Time step
