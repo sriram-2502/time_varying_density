@@ -56,7 +56,7 @@ function [x_euler, u_euler, x_dot] = forwardEuler_multiagent_vs_SFM(p, deltaT, c
     end         
 
     if(isgoal)
-        disp(['----- Agent ', num2str(agent_number), ' reached goal -----'])
+        % disp(['----- Agent ', num2str(agent_number), ' reached goal -----'])
     end
 
     % Transpose and return variables

@@ -1,4 +1,4 @@
-function [x_dot, u, isgoal, unicycle] = singleIntegrator_multiagent(t,x,ctrl_multiplier, gradDensityHandles,c1,c2,c3,c4, p, single_int_p, agent_number, dens_bool)
+function [x_dot, u, isgoal, unicycle, discrete] = singleIntegrator_multiagent(t,x,ctrl_multiplier, gradDensityHandles,c1,c2,c3,c4, p, single_int_p, agent_number, dens_bool)
 %singleIntegrator
 %   Propagates the kinematic model (i.e. single integrator system) with a
 %   control and changes to a LQR control given a radius from goal
@@ -25,6 +25,7 @@ if nargin < 12
 end
 isgoal = false;
 unicycle = false;
+discrete = false;
 
 if agent_number == 1
 rad_from_goal = p.rad_from_goal;

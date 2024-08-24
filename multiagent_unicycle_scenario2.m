@@ -226,8 +226,6 @@ for idx = 1:length(snapshot_times)
             % Get the historical positions up to the current snapshot
             trace_start = max(1, jj-trace_length+1);
             historical_positions = squeeze(x_euler(trace_start:jj, 1:2, i));
-            
-            
 
             % Plot traces
             plot(historical_positions(:, 1), historical_positions(:, 2), '--', 'Color', color_map{i}, 'LineWidth', 2);

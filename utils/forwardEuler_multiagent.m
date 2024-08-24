@@ -23,10 +23,14 @@ function [x_euler, u_euler, x_dot] = forwardEuler_multiagent(p, deltaT, ctrl_mul
         dens_bool = true;    end
 
     % Compute state derivatives and control inputs
-    [x_dot, u_euler, isgoal, unicycle] = dynamics(deltaT, x_temp, ctrl_multiplier, gradDensityHandles, c1, c2, c3, c4, p, dyn_p, agent_number, dens_bool);
+    [x_dot, u_euler, isgoal, unicycle, discrete] = dynamics(deltaT, x_temp, ctrl_multiplier, gradDensityHandles, c1, c2, c3, c4, p, dyn_p, agent_number, dens_bool);
+    
     % Forward Euler integration
-    x_euler = x_temp + deltaT * x_dot;
-
+    if(discrete)
+        x_euler = x_dot;
+    else
+        x_euler = x_temp + deltaT * x_dot;
+    end
 
     % % compute states for RK4
     % step_size = 0.01;

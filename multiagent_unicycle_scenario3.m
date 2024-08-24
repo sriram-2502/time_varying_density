@@ -1,16 +1,11 @@
 %% Obstacle Avoidance using single integrator dynamics
 clc; clear; close all
-
 % add paths
 mkdir('animations');
 addpath('./functions');
 addpath('./utils');
 addpath('dynamics-control');
 addpath('./bump_lib');
-
-% clear persistant values
-clear backwardEuler
-clear forwardEuler
 
 colors = colororder;
 blue = colors(1,:);
@@ -25,14 +20,14 @@ green = colors(5,:);
 num_agents = 3;
 
 % Start and goal positions for agents
-nav_p.x01 = [-9; -1; 0];               % Start position for agent 1
-nav_p.xd1 = [9; -1; 0];      % Goal position for agent 1
+nav_p.x01 = [5; 2; 0];               % Start position for agent 1
+nav_p.xd1 = [25;12.5;0];      % Goal position for agent 1
 
-nav_p.x02 = [-9; 1;0];           % Start position for agent 2
-nav_p.xd2 = [9; 1; 0];      % Goal position for agent 2
+nav_p.x02 = [5; 17.5;0];           % Start position for agent 2
+nav_p.xd2 = [0;25;0];      % Goal position for agent 2
 
-nav_p.x03 = [0; 0;-pi];             % Start position for agent 3
-nav_p.xd3 = [-16; 0; -pi];      % Goal position for agent 3
+nav_p.x03 = [20; 10;-pi];             % Start position for agent 3
+nav_p.xd3 = [0;0;0];      % Goal position for agent 3
             
 % Obstacle parameters
 nav_p.p = 2; % p-norm for obstacle set
@@ -46,9 +41,9 @@ nav_p.rad_from_goal = 4; % Radius for stopping density feedback control
 
 % Density function parameters
 % self raidus is 0.75 so enlareged radius is 1.5
-nav_p.r11 = 1.5; nav_p.r12 = 3;
-nav_p.r21 = 1.5; nav_p.r22 = 3;
-nav_p.r31 = 1.5; nav_p.r32 = 10;
+nav_p.r11 = 5; nav_p.r12 = 8;
+nav_p.r21 = 5; nav_p.r22 = 8;
+nav_p.r31 = 5; nav_p.r32 = 8;
 
 
 % Obstacle centers
@@ -63,9 +58,9 @@ gamma = 0; % Post-rotation angle in radians
 nav_p.alpha = 0.2; % Recommended value: 0.2
 
 % Simulation parameters
-M = 20000; % Number of loop iterations
+M = 5000; % Number of loop iterations
 deltaT = 0.01; % Time step
-ctrl_multiplier = 10; % Control parameter
+ctrl_multiplier = 100; % Control parameter
 
 % Optimization settings
 vpa_enable = true;
@@ -96,10 +91,15 @@ c = x_temp; % Use 'c' to hold current state
 bumpHandles = createBumpHandles();
 gradDensityHandles = createGradientHandles(nav_p);
 
-% Simulation loop
+%% Simulation loop
+% clear persistant values
+clear backwardEuler
+clear forwardEuler
+
+tic
 for iter = 2:M
     if mod(iter, 1) == 0
-        disp(['iter:', num2str(iter)]);
+        % disp(['iter:', num2str(iter)]);
     end
 
     % Update states and controls for each vehicle
@@ -110,7 +110,7 @@ for iter = 2:M
         c{i} = x_temp{i}; % Update control state
     end
 end
-
+toc
 %% Plot Time Domain
 fig_titles = {'States', 'Velocity', 'Omega'};
 
@@ -228,8 +228,8 @@ for idx = 1:length(snapshot_times)
     end
 
     % Set plot properties
-    xlim([-20, 10]);
-    ylim([-2,2]);
+    xlim([-10, 32]);
+    ylim([-10, 32]);
     % axis square;
     set(gca, 'LineWidth', 2, 'FontSize', 20); % Box line width and font size
 
@@ -339,8 +339,8 @@ for jj = 1:skip_rate:M
     set(gca, 'XTick', [], 'YTick', [], 'LineWidth', 2, 'FontSize', 20); % Box line width and font size
     axis square
     axis tight;
-    xlim([-20, 10]);
-    ylim([-20, 20]);
+    xlim([-10, 32]);
+    ylim([-10, 32]);
     
     % Add timestamp
     timestamp = sprintf('Time: %0.2f s', deltaT * jj);
