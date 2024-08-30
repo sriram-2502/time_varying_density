@@ -46,7 +46,7 @@ end
 if agent_number == 1
     rad_from_goal = p.rad_from_goal;
     xd = p.xd1;
-    saturation = 1;
+    saturation = 2;
     
     if dens_bool
         grad_density_vals = ctrl_multiplier*gradDensityHandles.grad_density1(x(1:2),c1(1:2),c2(1:2),c3(1:2),c4(1:2));

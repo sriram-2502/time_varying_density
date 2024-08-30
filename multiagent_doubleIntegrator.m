@@ -77,13 +77,13 @@ nav_p.xd4 = [L; -L-offset; 0;0];    % Goal position for agent 4
 
 % Obstacle parameters
 nav_p.p = 2; % p-norm for obstacle set
-nav_p.rad_from_goal = 1; % Radius for stopping density feedback control
+nav_p.rad_from_goal = 2; % Radius for stopping density feedback control
 
 % Density function parameters
-nav_p.r11 = 0.5; nav_p.r12 = 2;
-nav_p.r21 = 0.5; nav_p.r22 = 2;
-nav_p.r31 = 0.5; nav_p.r32 = 2;
-nav_p.r41 = 0.5; nav_p.r42 = 2;
+nav_p.r11 = 0.75; nav_p.r12 = 2;
+nav_p.r21 = 0.75; nav_p.r22 = 2;
+nav_p.r31 = 0.75; nav_p.r32 = 2;
+nav_p.r41 = 0.75; nav_p.r42 = 2;
 
 % Obstacle centers
 nav_p.c0 = 0; % Weaker condition for unsafe set
@@ -101,7 +101,7 @@ nav_p.kd = 1;
 % Simulation parameters
 M = 1000; % Number of loop iterations
 deltaT = 0.1; % Time step
-ctrl_multiplier = 10; % Control parameter
+ctrl_multiplier = 20; % Control parameter
 
 % Optimization settings
 vpa_enable = true;
@@ -198,8 +198,8 @@ purple = colors(4, :);
 color_map = {blue, red, yellow, purple};
 
 % Define the time steps for the snapshots and their corresponding trail lengths
-snapshot_times = [200, 250, 320, 350]; % Time steps for snapshots
-trail_lengths = [200, 70, 70, 30]; % Trail lengths corresponding to each snapshot
+snapshot_times = [200, 300, 450, 550]; % Time steps for snapshots
+trail_lengths = [200, 100, 100, 100]; % Trail lengths corresponding to each snapshot
 
 % Define the figure and subplot layout
 figure;
