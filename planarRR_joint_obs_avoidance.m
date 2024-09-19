@@ -9,7 +9,7 @@ delete('navigation\func\*')
 % else run twice for changes in density to update
 
 % use motion plan or not
-use_motion_plan = true;
+use_motion_plan = false;
 
 %% working obstacles and configurations
 % 1 random

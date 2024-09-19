@@ -43,6 +43,7 @@ density_params.alpha = 1e-1; % Best value 1e-1
 alpha = density_params.alpha;
 
 if(use_motion_plan)
+    % for controller with motion plan
     norm_x = sqrt((1-cos(x(1)-x_goal(1)))^2 + (1-cos(x(2)-x_goal(2)))^2);
 else
     % for controller without motion plan (dens fun on error dyn)
