@@ -18,7 +18,7 @@ robot_params.I1 = 0.1 ;robot_params.I2 = 0.1;
 %navigation_params.mu = 0.1; % Friction coefficient [-]
 %navigation_params.mg = 20; % Weight [N].
 navigation_params.saturation = 2; %(best value = 2 for default ID)
-navigation_params.rad_from_goal = 0.01;
+navigation_params.rad_from_goal = 0.1; %(best value = 0.01 for default ID)
 navigation_params.ctrl_multiplier = 1; %(best value = 10 for default ID)
 
 %% parameters for euler integration
