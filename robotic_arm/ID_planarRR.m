@@ -41,12 +41,13 @@ function joint_ID = ID_planarRR(q_des,q_dot_des,q_ddot_des,robot_params,navigati
         % Density based inverse dynamics control
         if(use_motion_plan)
             e = q - q_des(i,:)'; e_dot = q_dot - q_dot_des(:,i);
-            grad_density = grad_density_f(e,t);
+            grad_density = grad_density_f(q,t);
             u_id = M*(q_ddot_des(:,i)) + C + G + M*(grad_density(1:2)- Kv.*e_dot);
         else
             % new density controller without motion plan
-            e = q - xd_f(t)'; e_dot = q_dot - x_dot_d_f(t)';
-            q_ddot_des = x_ddot_d_f(t)';
+            e = q - navigation_params.q_goal(:,i)'; 
+            e_dot = q_dot - navigation_params.q_dot_goal(:,i)';
+            q_ddot_des = navigation_params.q_ddot_goal(:,i)';
             grad_density = grad_density_f(q,t);
             u_id = M*(q_ddot_des) + C + G + M*(-grad_density(1:2)- Kv.*e_dot);
         end

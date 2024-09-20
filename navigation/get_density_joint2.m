@@ -30,7 +30,7 @@ tic
 %% get parameters
 x = sym('x',[2 1],'real'); % joint states
 syms t;
-x_goal = navigation_params.x_goal';
+x_goal = navigation_params.x_goal_f';
 
 %% form attracting density
 % V(x):= 1/||x||^2*alpha

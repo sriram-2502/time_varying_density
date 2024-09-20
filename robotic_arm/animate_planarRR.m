@@ -1,8 +1,4 @@
-function animate_planarRR(t,joints,navigation_params,obs_funs,ee_plan,x_ini,t_scale, x_goal)
-if(nargin<7)
-    x_ini = navigation_params.x_ini;
-    x_goal = navigation_params.x_goal;
-end
+function animate_planarRR(t,joints,navigation_params,obs_funs,ee_plan,x_ini )
 
 %% get robot params
 [robot_params,euler_params,~,~,animate_params] = get_params();
@@ -79,7 +75,8 @@ for i = 1:skip_rate:N
 
     % plot goal position on the end effector
     t_goal = i*dT;
-    plot(0.8+sin(t_scale*t_goal), -0.6-cos(t_scale*t_goal),'og', 'MarkerSize',10, 'MarkerFaceColor','green'); 
+    x_ref = x_ref_f(t_goal);
+    plot(x_ref(1), x_ref(2),'og', 'MarkerSize',10, 'MarkerFaceColor','green'); 
 
     %  plot trail for ee traj
     if(~isempty(ee_plan))

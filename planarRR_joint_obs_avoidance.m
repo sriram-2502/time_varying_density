@@ -9,7 +9,7 @@ delete('navigation\func\*')
 % else run twice for changes in density to update
 
 % use motion plan or not
-use_motion_plan = false;
+use_motion_plan = true;
 
 %% working obstacles and configurations
 % 1 random
@@ -42,14 +42,23 @@ syms t;
 navigation_params.x_ini = [0.01 0.01];
 t_scale = 1;
 time_varying_goal = [0.8+sin(t_scale*t), -0.6-cos(t_scale*t)]; % good one - circle
-navigation_params.x_goal = IK_planarRR(time_varying_goal);
+% time_varying_goal = [0.5+sin(t_scale*t), -0.4-cos(t_scale*t)]; % good one - circle
+matlabFunction(time_varying_goal, 'File', 'navigation/func/x_ref_f', 'Vars', {t}, 'Optimize', false);
 
-% goal velocity
-navigation_params.x_vel_goal_f =  diff(navigation_params.x_goal);
-
-% goal accel
+% get ref traj in joint space as funtion
+navigation_params.x_goal_f = IK_planarRR(time_varying_goal);
+navigation_params.x_vel_goal_f =  diff(navigation_params.x_goal_f);
 navigation_params.x_accel_goal_f =  diff(navigation_params.x_vel_goal_f);
 
+% get values of vel and accel as vector
+t_vector = euler_params.step_size:euler_params.n_steps;
+q_goal = [];
+for i = 1:length(t_vector)
+     q_goal = [q_goal;IK_planarRR(x_ref_f(t_vector(i)))];
+end
+navigation_params.q_goal = q_goal;
+navigation_params.q_dot_goal = diff(q_goal);
+navigation_params.q_ddot_goal = diff(navigation_params.q_dot_goal);
 
 % define obstacles
 navigation_params.dynamic_obs = 0;
@@ -74,10 +83,14 @@ navigation_funs = get_density_joint2(navigation_params,joint_obs,use_motion_plan
 
 %% Create function handles
 obs_funs = [];
-matlabFunction(navigation_params.x_goal, 'File', 'navigation/func/xd_f', 'Vars', {t}, 'Optimize', false);
+
+% joint space reference traj functions
+matlabFunction(navigation_params.x_goal_f, 'File', 'navigation/func/xd_f', 'Vars', {t}, 'Optimize', false);
 matlabFunction(navigation_params.x_vel_goal_f, 'File', 'navigation/func/x_dot_d_f', 'Vars', {t}, 'Optimize', false);
 matlabFunction(navigation_params.x_accel_goal_f, 'File', 'navigation/func/x_ddot_d_f', 'Vars', {t}, 'Optimize', false);
-matlabFunction(jacobian(navigation_params.x_goal, t), 'File', 'navigation/func/jac_xd_f', 'Vars', {t}, 'Optimize', false);
+matlabFunction(jacobian(navigation_params.x_goal_f, t), 'File', 'navigation/func/jac_xd_f', 'Vars', {t}, 'Optimize', false);
+
+% density based functions
 matlabFunction(navigation_funs.piecewise_f, 'File', './navigation/func/bump_f', 'Vars', {x,t}, 'Optimize', false);
 matlabFunction(navigation_funs.V, 'File', './navigation/func/rho_f', 'Vars', {x,t}, 'Optimize', false);
 matlabFunction(navigation_funs.density, 'File', './navigation/func/density_f', 'Vars', {x,t}, 'Optimize', false);
@@ -110,13 +123,12 @@ joint_control = ID_planarRR(q_des,q_dot_des,q_ddot_des,robot_params,navigation_p
 %% animate control
 ee_plan = [];
 x_ini = FK_planarRR(navigation_params.x_ini - [pi/2 0]);
-x_goal = FK_planarRR(navigation_params.x_goal - [pi/2 0]);
 navigation_params.time_varying_goal = time_varying_goal;
 
 joints = joint_control.angles;
 joint_control.t = euler_params.step_size:euler_params.n_steps;
 time = joint_control.t;
-animate_planarRR(time,joints,navigation_params,obs_funs,ee_plan,x_ini,t_scale,x_goal)
+animate_planarRR(time,joints,navigation_params,obs_funs,ee_plan,x_ini)
 
 %% save plan and paraters
 % save('saved_data/navigation_params','navigation_params')

@@ -1,6 +1,6 @@
 function [x_dot] = singleIntegrator(t,x,navigation_params)% xdot = u dynamics
 
-x_goal = navigation_params.x_goal;
+x_goal = navigation_params.x_goal_f;
 rad_from_goal = navigation_params.rad_from_goal;
 saturation = navigation_params.saturation;
 
@@ -32,7 +32,7 @@ K = lqr_params.K;
 
 % Parameters
 rad_from_goal = navigation_params.rad_from_goal;
-xd = navigation_params.x_goal;
+xd = navigation_params.x_goal_f;
 lqr_enable = false;
 normalization = true;
 stop_enable = true;

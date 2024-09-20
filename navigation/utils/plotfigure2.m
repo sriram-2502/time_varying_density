@@ -8,7 +8,7 @@ joint_vel = joint_control.vel;
 control = joint_control.control;
 time = joint_control.t;
 
-x_goal = navigation_params.x_goal;
+x_goal = navigation_params.x_goal_f;
 n_obs = navigation_params.n_obs;
 x_obs = navigation_params.x_obs;
 x_obs_rad = navigation_params.x_obs_rad;
