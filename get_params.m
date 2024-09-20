@@ -24,7 +24,7 @@ navigation_params.ctrl_multiplier = 1; %(best value = 10 for default ID)
 %% parameters for euler integration
 % Target set radius | Radius when to stop using Density FB control
 
-euler_params.n_steps = 10000;
+euler_params.n_steps = 15000;
 euler_params.step_size = 0.001;
 
 

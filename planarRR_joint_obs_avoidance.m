@@ -11,6 +11,11 @@ delete('navigation\func\*')
 % use motion plan or not
 use_motion_plan = false;
 
+% working setup for ID control with motion plan
+% Kv = 10
+% ctrl_mult = 10
+% rad_from_goal = 0.01
+
 %% Problem setup
 x = sym('x',[2 1],'real'); %joint states
 [robot_params,euler_params,navigation_params,lqr_params,animate_params] = get_params(x);
@@ -18,11 +23,11 @@ x = sym('x',[2 1],'real'); %joint states
 syms t;
 % define start and goal in joint space
 navigation_params.x_ini = [0.01 0.01];
-t_scale = 1;
-% time_varying_goal = [0.8+sin(t_scale*t), -0.6-cos(t_scale*t)]; % good one - circle
+t_scale = 0.5;
+time_varying_goal = [0.8+sin(t_scale*t), -0.6-cos(t_scale*t)]; % good one - circle
 % time_varying_goal = [0.5+sin(t_scale*t), -0.4-cos(t_scale*t)]; % good one - circle
 % time_varying_goal = [0.6+sin(t_scale*t), -0.6-cos(t_scale*t)]; % good one - circle
-time_varying_goal = [3*sin(exp(-5/(t_scale*t)))-1, -1]; % good one - horizontal line
+% time_varying_goal = [3*sin(exp(-5/(t_scale*t)))-1, -1]; % good one - horizontal line
 % time_varying_goal = [1.3, 2*sin(exp(-5/(t_scale*t^2)))-1.5]; % good one - vertical line
 
 % time_varying_goal = [sin(t_scale*t),sin(t_scale*t)-0.5]; % good one - diag line

@@ -1,7 +1,7 @@
 function joint_ID = ID_planarRR(q_des,q_dot_des,q_ddot_des,robot_params,navigation_params,euler_params,use_motion_plan)
 
     Kp = 1; %gain for testing regular inverse dynamics
-    Kv = 1; %gain (Kv=10 working for density based inverse dynamics)
+    Kv = 1/25; %gain (Kv=10 working for density based inverse dynamics)
     q = navigation_params.x_ini'; q_dot = [0;0];
     joint_ID.angles = q';
     joint_ID.vel = q_dot';
