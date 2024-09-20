@@ -47,7 +47,7 @@ if(use_motion_plan)
     norm_x = sqrt((1-cos(x(1)-x_goal(1)))^2 + (1-cos(x(2)-x_goal(2)))^2);
 else
     % for controller without motion plan (dens fun on error dyn)
-%     norm_x = norm(x);
+    % norm_x = norm(x);
     norm_x = sqrt((1-cos(x(1)-x_goal(1)))^2 + (1-cos(x(2)-x_goal(2)))^2);
 end
 

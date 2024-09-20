@@ -1,7 +1,7 @@
 function joint_ID = ID_planarRR(q_des,q_dot_des,q_ddot_des,robot_params,navigation_params,euler_params,use_motion_plan)
 
     Kp = 1; %gain for testing regular inverse dynamics
-    Kv = 10; %gain (Kv=10 working for density based inverse dynamics)
+    Kv = 1; %gain (Kv=10 working for density based inverse dynamics)
     q = navigation_params.x_ini'; q_dot = [0;0];
     joint_ID.angles = q';
     joint_ID.vel = q_dot';
@@ -34,6 +34,7 @@ function joint_ID = ID_planarRR(q_des,q_dot_des,q_ddot_des,robot_params,navigati
         M = dynamics.M; C = dynamics.C; G = dynamics.G;
 
         % vanilla inverse dynamics
+        % e = q - q_des(i,:)'; e_dot = q_dot - q_dot_des(:,i);
         % u_id = M*(q_ddot_des(:,i)) + C + G + M*(-Kp*e -Kv.*e_dot);
 
         % Density based inverse dynamics control
@@ -47,9 +48,9 @@ function joint_ID = ID_planarRR(q_des,q_dot_des,q_ddot_des,robot_params,navigati
             e_dot = q_dot - navigation_params.q_dot_goal(i,:)';
             q_ddot_des = navigation_params.q_ddot_goal(i,:)';
             grad_density = grad_density_f(q,t);
-            u_bar = grad_density(1:2) -Kv.*e_dot;
+            u_bar = Kp.*grad_density(1:2) -Kv.*e_dot;
             u_id = navigation_params.ctrl_multiplier*(M*q_ddot_des + C + G + M*u_bar);
-        end
+        
 
         % Density controller with backstepping
 %         grad_density = grad_density_f(q,t);
@@ -59,6 +60,8 @@ function joint_ID = ID_planarRR(q_des,q_dot_des,q_ddot_des,robot_params,navigati
 %         norm_z = norm(z)^2;
 %         scale = 1/(2*alpha_bar - 2);
 %         u_id = M*(q_ddot_des(:,i)) + C + G + M*(scale*norm_z*grad_density(1:2)/density);
+
+        end
 
         % apply control to simulate using euler
         dynamics = dynamics_planarRR(t, x, u_id, robot_params);
