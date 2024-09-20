@@ -9,7 +9,7 @@ delete('navigation\func\*')
 % else run twice for changes in density to update
 
 % use motion plan or not
-use_motion_plan = true;
+use_motion_plan = false;
 
 %% working obstacles and configurations
 % 1 random
@@ -112,7 +112,9 @@ if(use_motion_plan)
 else
     % inverse dynamics without motion plan
     disp('--- running inverse dynamics controller without motion plan ---')
-    q_des = navigation_params.x_goal'; q_dot_des = [0;0]; q_ddot_des = [0;0]; 
+    q_des = navigation_params.q_goal; 
+    q_dot_des = navigation_params.q_dot_goal; 
+    q_ddot_des = navigation_params.q_ddot_goal; 
 end    
 joint_control = ID_planarRR(q_des,q_dot_des,q_ddot_des,robot_params,navigation_params,euler_params,use_motion_plan);
 
