@@ -63,8 +63,8 @@ link1 = line([0 x1],[0 y1],'color','k','LineWidth',10);
 link2 = line([x1 x2],[y1 y2],'color','r','LineWidth',10);
 
 % record time
-T = t;
-T_end = t(end);
+T = floor(t);
+T_end = floor(t(end));
 str = strcat("Time: " + num2str(T) + " s" + "/", num2str(T_end+" s"));
 timestamp = text(1.5,-2.5,str,'HorizontalAlignment','left','VerticalAlignment','top');
 axis([-3 3 -3 3])
@@ -101,8 +101,8 @@ for i = 1:skip_rate:N
     set(link2,'xdata',[x1 x2],'ydata',[y1 y2]);
     
     % update time
-    T = t(i);
-    T_end = t(end);
+    T = floor(t(i));
+    T_end = floor(t(end));
     str = strcat("Time: " + num2str(T) + " s" + "/", num2str(T_end+" s"));
     set(timestamp,'String',str);
     

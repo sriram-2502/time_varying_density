@@ -15,6 +15,8 @@ use_motion_plan = false;
 % Kv = 10
 % ctrl_mult = 10
 % rad_from_goal = 0.01
+% t_scale = 1; for motion plan
+% t_scale = 0.5; for no motion plan
 
 %% Problem setup
 x = sym('x',[2 1],'real'); %joint states
@@ -27,12 +29,14 @@ t_scale = 0.5;
 time_varying_goal = [0.8+sin(t_scale*t), -0.6-cos(t_scale*t)]; % good one - circle
 % time_varying_goal = [0.5+sin(t_scale*t), -0.4-cos(t_scale*t)]; % good one - circle
 % time_varying_goal = [0.6+sin(t_scale*t), -0.6-cos(t_scale*t)]; % good one - circle
+
 % time_varying_goal = [3*sin(exp(-5/(t_scale*t)))-1, -1]; % good one - horizontal line
 % time_varying_goal = [1.3, 2*sin(exp(-5/(t_scale*t^2)))-1.5]; % good one - vertical line
-
 % time_varying_goal = [sin(t_scale*t),sin(t_scale*t)-0.5]; % good one - diag line
 % time_varying_goal = [sin(1.5*exp(-1/(t_scale*t)))-0.5,sin(1.5*exp(-1/(t_scale*t)))-1.7]; % good one - diag line
 % time_varying_goal = [2*sin(exp(-1/(t_scale*t)))-0.5, sin(exp(-1/(t_scale*t)))-0.5]; 
+% time_varying_goal =[0+0.001*sin(t_scale*t) 1.9];
+
 matlabFunction(time_varying_goal, 'File', 'navigation/func/x_ref_f', 'Vars', {t}, 'Optimize', false);
 
 % get ref traj in joint space as funtion
@@ -101,30 +105,30 @@ matlabFunction(navigation_funs.density, 'File', './navigation/func/density_f', '
 matlabFunction(navigation_funs.grad_density, 'File', './navigation/func/grad_density_f', 'Vars', {x,t}, 'Optimize', false);
 rehash path
 
-%% using Euler method to get plan
+%% get inverse dynamics 
 if(use_motion_plan)
     disp('--- getting motion plan ---')
     [x_euler, u_euler] = forwardEuler(@singleIntegrator,navigation_params);
-    x_euler = x_euler';
-end
+    x_euler = x_euler'
 
-%% get inverse dynamics 
-if(use_motion_plan)
     % inverse dynamics with motion planner
     disp('--- running inverse dynamics controller with motion plan ---')
-    q_des = x_euler; q_dot_des = u_euler; q_ddot_des = [diff(u_euler(1,:));diff(u_euler(2,:))]; 
+    q_des = x_euler; 
+    q_dot_des = u_euler; 
+    q_ddot_des = [diff(u_euler(1,:));diff(u_euler(2,:))]; 
+
+    % plot density
+    % plot_density_joint(x_euler, navigation_params, obs_funs)
+    % plot_density_joint(joint_control.angles, navigation_params, obs_funs)
 else
     % inverse dynamics without motion plan
     disp('--- running inverse dynamics controller without motion plan ---')
     q_des = navigation_params.q_goal; 
     q_dot_des = navigation_params.q_dot_goal; 
     q_ddot_des = navigation_params.q_ddot_goal; 
-end    
-joint_control = ID_planarRR(q_des,q_dot_des,q_ddot_des,robot_params,navigation_params,euler_params,use_motion_plan);
+end   
 
-%% plot density
-% plot_density_joint(x_euler, navigation_params, obs_funs)
-% plot_density_joint(joint_control.angles, navigation_params, obs_funs)
+joint_control = ID_planarRR(q_des,q_dot_des,q_ddot_des,robot_params,navigation_params,euler_params,use_motion_plan);
 
 %% animate control
 ee_plan = [];

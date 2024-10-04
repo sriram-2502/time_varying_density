@@ -7,6 +7,7 @@ joint_angles = joint_control.angles;
 joint_vel = joint_control.vel;
 control = joint_control.control;
 time = joint_control.t;
+time = time(1:end-2);
 
 x_goal = navigation_params.x_goal_f;
 n_obs = navigation_params.n_obs;
@@ -25,8 +26,9 @@ redColor = [1 0 0];
 obsColor = [.7 .7 .7]; % Obstacle color -> Grey
 
 % figure()
+hold on;
 %% ------------------------ plot task space solution --------------------------------------------
-p1 = subplot(2,4,5);
+p1 = subplot(2,4,6);
 % plot obstacles at t=0;
 % plot circles for obstalces
 r1 = x_obs_rad(1); r2 = x_obs_rad(2);
@@ -63,10 +65,10 @@ x2 = x1 + a2*sin(q1+q2); y2 = y1 - a2*cos(q1+q2);
 % idx = [1,1000,2500,3000,3500];
 
 % change idx# to idx for corresponding figure
-idx1 = [1,100:100:800];
-idx2 = [1000:100:2000];
-idx = [2000:100:3000];
-idx4 = [3000:100:3500];
+idx1 = [1,100:300:3000];
+idx2 = [3000:300:5000];
+idx3 = [5000:300:7500];
+idx = [7500:150:8499];
 for angles = 1:length(idx)
     q1 = joints(idx(angles),1); q2 = joints(idx(angles),2);
     x1 = a1*sin(q1); y1 = -a1*cos(q1);
@@ -84,17 +86,19 @@ end
 
 %% plot goal position on the end effector
 N = length(time)-1; 
-skip_rate=100;
+skip_rate=200;
 dT = euler_params.step_size;
 state_index = idx(end);
-trail_length = 500+1; 
+trail_length = 1400+1; 
 tail_grad = linspace(0,1, trail_length);
 if trail_length == 1
     trail_skip_rate = 1;
 else
     trail_skip_rate = round(length(tail_grad)/10);
 end
-x_goal = [0.8+sin(0:dT:state_index); -0.6-cos(0:dT:state_index)]';
+t_scale = 0.4; %match this with main script
+tvec = [0:dT:state_index].*t_scale;
+x_goal = [0.8+sin(tvec); -0.6-cos(tvec)]';
 
 scatter(x_goal(state_index,1), x_goal(state_index,2), 80,'filled','o','MarkerFaceColor',green, 'LineWidth', 2); hold on;
 s_plot = scatter(x_goal(state_index-trail_length+1:skip_rate:state_index,1),...
@@ -130,18 +134,18 @@ lgd = legend('Robot','Goal','Obstacle', ...
 
 
 %------------ plot joint space solution ----------------------
-[X,Y] = meshgrid(-2*pi:0.1:2*pi, -2*pi:0.1:2*pi);
-Z = zeros(size(X));
-Z_grad_x1 = zeros(size(X));
-Z_grad_x2 = zeros(size(X));
-for i=1:length(X)
-    for j = 1:length(Y)
-        Z(i,j) = density_f([X(i,j);Y(i,j)],0);
-        z_grad = grad_density_f([X(i,j);Y(i,j)],0);
-        Z_grad_x1(i,j) = z_grad(1);
-        Z_grad_x2(i,j) = z_grad(2);
-    end
-end
+% [X,Y] = meshgrid(-2*pi:0.1:2*pi, -2*pi:0.1:2*pi);
+% Z = zeros(size(X));
+% Z_grad_x1 = zeros(size(X));
+% Z_grad_x2 = zeros(size(X));
+% for i=1:length(X)
+%     for j = 1:length(Y)
+%         Z(i,j) = density_f([X(i,j);Y(i,j)],0);
+%         z_grad = grad_density_f([X(i,j);Y(i,j)],0);
+%         Z_grad_x1(i,j) = z_grad(1);
+%         Z_grad_x2(i,j) = z_grad(2);
+%     end
+% end
 
 % p2 = subplot(4,4,[2,6]);
 % scatter(joint_obs(:,1)',joint_obs(:,2)',50,'Marker','square','MarkerEdgeColor',grayColor,...
@@ -159,28 +163,28 @@ end
 % xlabel('q_1'); ylabel('q_2');
 
 %% ------------------ state traj plots ----------------------------------------------
-figure
+% figure
 
-state_x = joint_angles;
-state_xdot = joint_vel;
-x_goal = [0.8+sin(0:dT:length(time)); -0.6-cos(0:dT:length(time))]';
-goal_dist = [];obs_dist=[];
-for i = 1:length(time)
-    goal_dist = [goal_dist; norm(FK_planarRR(state_x(i,:))-x_goal(i,:));];
-    obs_dist = [obs_dist; norm(state_x(i,:)-x_obs)];
-end
-    
+% state_x = joint_angles;
+% state_xdot = joint_vel;
+% x_goal = [0.8+sin(0:dT:length(time)); -0.6-cos(0:dT:length(time))]';
+% goal_dist = [];obs_dist=[];
+% for i = 1:length(time)
+%     goal_dist = [goal_dist; norm(FK_planarRR(state_x(i,:))-x_goal(i,:));];
+%     obs_dist = [obs_dist; norm(state_x(i,:)-x_obs)];
+% end
+% 
 
-subplot(4,4,[1,2])
-plot(time./1000,goal_dist,'LineWidth',2); hold on;
-plot(time./1000,obs_dist,'LineWidth',2); hold on;
-% xlabel('time (s)','interpreter','latex', 'FontSize', 20);
-ylabel('states','interpreter','latex', 'FontSize', 20);
-axes1 = gca;
-box(axes1,'on');
-hold(axes1,'off');
-% Set the remaining axes properties
-set(axes1,'FontSize',15,'LineWidth',1.5);
+% subplot(4,4,[1,2])
+% plot(time./1000,goal_dist,'LineWidth',2); hold on;
+% plot(time./1000,obs_dist,'LineWidth',2); hold on;
+% % xlabel('time (s)','interpreter','latex', 'FontSize', 20);
+% ylabel('states','interpreter','latex', 'FontSize', 20);
+% axes1 = gca;
+% box(axes1,'on');
+% hold(axes1,'off');
+% % Set the remaining axes properties
+% set(axes1,'FontSize',15,'LineWidth',1.5);
 
 % subplot(4,4,[1,2])
 % plot(time./1000,state_x(:,1),'LineWidth',2); hold on;
@@ -195,13 +199,13 @@ set(axes1,'FontSize',15,'LineWidth',1.5);
 % % Set the remaining axes properties
 % set(axes1,'FontSize',15,'LineWidth',1.5);
 
-subplot(4,4,[5,6])
-plot(time./1000,control(:,1),'LineWidth',2); hold on;
-plot(time./1000,control(:,2),'LineWidth',2);
-xlabel('time (s)','interpreter','latex', 'FontSize', 20);
-ylabel('control','interpreter','latex', 'FontSize', 20);
-axes1 = gca;
-box(axes1,'on');
-hold(axes1,'off');
-% Set the remaining axes properties
-set(axes1,'FontSize',15,'LineWidth',1.5);
+% subplot(4,4,[5,6])
+% plot(time./1000,control(:,1),'LineWidth',2); hold on;
+% plot(time./1000,control(:,2),'LineWidth',2);
+% xlabel('time (s)','interpreter','latex', 'FontSize', 20);
+% ylabel('control','interpreter','latex', 'FontSize', 20);
+% axes1 = gca;
+% box(axes1,'on');
+% hold(axes1,'off');
+% % Set the remaining axes properties
+% set(axes1,'FontSize',15,'LineWidth',1.5);

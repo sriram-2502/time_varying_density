@@ -17,14 +17,16 @@ robot_params.I1 = 0.1 ;robot_params.I2 = 0.1;
 % leads to more smooth trajectories
 %navigation_params.mu = 0.1; % Friction coefficient [-]
 %navigation_params.mg = 20; % Weight [N].
+
+% params for motion plan only
 navigation_params.saturation = 2; %(best value = 2 for default ID)
-navigation_params.rad_from_goal = 0.1; %(best value = 0.01 for default ID)
-navigation_params.ctrl_multiplier = 1; %(best value = 10 for default ID)
+navigation_params.rad_from_goal = 0.01; %(best value = 0.01 for default ID)
+navigation_params.ctrl_multiplier = 10; %(best value = 10 for default ID)
 
 %% parameters for euler integration
 % Target set radius | Radius when to stop using Density FB control
 
-euler_params.n_steps = 15000;
+euler_params.n_steps = 10000; % use 8500 for ACC paper
 euler_params.step_size = 0.001;
 
 

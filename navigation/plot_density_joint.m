@@ -81,7 +81,7 @@ if strcmp(class(x_goal), 'sym')
     xd = xd_f(t)';
 end
 
-plot(xd(1),xd(2),'og', 'MarkerSize',10, 'MarkerFaceColor','green'); hold on;
+% plot(xd(1),xd(2),'og', 'MarkerSize',10, 'MarkerFaceColor','green'); hold on;
 
 legend('obstacles','Start','Trajectory','Goal')
 title('Joint Space Obstacle Avoidance');

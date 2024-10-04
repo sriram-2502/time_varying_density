@@ -1,7 +1,5 @@
 function joint_ID = ID_planarRR(q_des,q_dot_des,q_ddot_des,robot_params,navigation_params,euler_params,use_motion_plan)
 
-    Kp = 1; %gain for testing regular inverse dynamics
-    Kv = 1/25; %gain (Kv=10 working for density based inverse dynamics)
     q = navigation_params.x_ini'; q_dot = [0;0];
     joint_ID.angles = q';
     joint_ID.vel = q_dot';
@@ -33,34 +31,38 @@ function joint_ID = ID_planarRR(q_des,q_dot_des,q_ddot_des,robot_params,navigati
         dynamics = dynamics_planarRR(0, x, [0;0], robot_params);
         M = dynamics.M; C = dynamics.C; G = dynamics.G;
 
-        % vanilla inverse dynamics
-        % e = q - q_des(i,:)'; e_dot = q_dot - q_dot_des(:,i);
-        % u_id = M*(q_ddot_des(:,i)) + C + G + M*(-Kp*e -Kv.*e_dot);
-
         % Density based inverse dynamics control
         if(use_motion_plan)
+            % default controller
+            % e = q - q_des(i,:)'; e_dot = q_dot - q_dot_des(:,i);
+            % grad_density = grad_density_f(e,t);
+            % Kv = 10;
+            % u_id = M*(q_ddot_des(:,i)) + C + G + M*(grad_density(1:2) -Kv.*e_dot);
+            
+            % vanilla inverse dynamics
+            Kp  = 1; Kv = 10;
             e = q - q_des(i,:)'; e_dot = q_dot - q_dot_des(:,i);
-            grad_density = grad_density_f(e,t);
-            u_id = M*(q_ddot_des(:,i)) + C + G + M*(grad_density(1:2) -Kv.*e_dot);
+            u_id = M*(q_ddot_des(:,i)) + C + G + M*(-Kp*e -Kv.*e_dot);
+
+            % % Density controller with backstepping
+            % e = q - q_des(i,:)'; e_dot = q_dot - q_dot_des(:,i);
+            % grad_density = grad_density_f(q,t);
+            % density = density_f(q,t);
+            % alpha_bar = 2;
+            % norm_e = norm(e)^2;
+            % scale = 0.5;
+            % % scale = 0.1;
+            % beta2=1;
+            % u_id = M*(beta2*q_ddot_des(:,i)) + C + G + M*(scale*norm_e*grad_density(1:2)./density);
+
         else
             % new density controller without motion plan
+            Kp = 1; Kv = 1/25; beta2 = 1; beta3 = 10;
             e = q - navigation_params.q_goal(i,:)'; 
-            e_dot = q_dot - navigation_params.q_dot_goal(i,:)';
-            q_ddot_des = navigation_params.q_ddot_goal(i,:)';
+            e_dot = q_dot - q_dot_des(i,:)';
             grad_density = grad_density_f(q,t);
-            u_bar = Kp.*grad_density(1:2) -Kv.*e_dot;
-            u_id = navigation_params.ctrl_multiplier*(M*q_ddot_des + C + G + M*u_bar);
-        
-
-        % Density controller with backstepping
-%         grad_density = grad_density_f(q,t);
-%         density = density_f(q,t);
-%         alpha_bar = 10;
-%         z = q_dot - q_des(i,:);
-%         norm_z = norm(z)^2;
-%         scale = 1/(2*alpha_bar - 2);
-%         u_id = M*(q_ddot_des(:,i)) + C + G + M*(scale*norm_z*grad_density(1:2)/density);
-
+            u_bar = beta2*(Kp.*grad_density(1:2) - Kv.*e_dot);
+            u_id = beta3*M*q_ddot_des(i,:)' + C + G + M*u_bar;
         end
 
         % apply control to simulate using euler
