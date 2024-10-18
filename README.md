@@ -14,7 +14,7 @@ We exploit the occupancy-based interpretation of density in constructing analyti
 </p>
 (a) Density function defined on an environment with a circular unsafe set and a point target, (b) Corresponding occupancy measure obtained using trajectories from 100 initial conditions sampled within the initial set.
 
-# Mutliagent Systems
+# Multiagent Systems
 <p align="center">
   <img src="figures_paper/multi_agent_systems.png" alt="animated" />
 </p>
