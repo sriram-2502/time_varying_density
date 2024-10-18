@@ -15,16 +15,6 @@ We exploit the occupancy-based interpretation of density in constructing analyti
 (a) Density function defined on an environment with a circular unsafe set and a point target, (b) Corresponding occupancy measure obtained using trajectories from 100 initial conditions sampled within the initial set.
 
 # Multiagent Systems
-Three agent scenario where all the agents are the same size
-<p align="center">
-  <img src="animations/3_agent_scenario.gif" alt="animated" />
-</p>
-
-Four agent scenario where all the agents are the same size
-<p align="center">
-  <img src="animations/4_agent_scenario_1.gif" alt="animated" />
-</p>
-
 Four agent scenario where two agents are bigger than the other agents
 <p align="center">
   <img src="animations/4_agent_scenario_2.gif" alt="animated" />
