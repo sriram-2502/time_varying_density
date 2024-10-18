@@ -4,7 +4,7 @@ This work uses density functions for safe navigation in dynamic environments. Th
 # Density functions
 Density functions are a physically intuitive way to solve almost everywhere (a.e.) safe navigation problems.
 <p align="center">
-  <img src="figures_paper/density_figure.png" alt="fig" />
+  <img src="figures_paper/density_figure.png" alt="fig" width="400" />
 </p>
 Inverse bump function: (a) top view showing contours and (b) 3D view.
 
