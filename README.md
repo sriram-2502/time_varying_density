@@ -16,5 +16,5 @@ We exploit the occupancy-based interpretation of density in constructing analyti
 
 # Mutliagent Systems
 <p align="center">
-  <img src="animations/4_agent_scenario_1.gif" alt="animated" />
+  <img src="animations/3_agent_scenario.gif" alt="animated" width="600" />
 </p>
