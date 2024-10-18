@@ -29,5 +29,5 @@ Six agent scenario where all the agents are the same size
 # Robotic Arm
 Safe trajectory tracking of a robotic arm while avoinding obstalces
 <p align="center">
-  <img src="animations/planarRR.gif" alt="animated" />
+  <img src="animations/planarRR.gif" alt="animated" width="600"/>
 </p>
