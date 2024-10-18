@@ -9,7 +9,7 @@ function [y_backward] = backwardEuler(agent_id, y, deltaT)
 
     % Check if the agent's state exists in the map
     if ~isKey(agentStates, agent_id)
-        disp(['Setting zero for agent ' num2str(agent_id) ' in backward euler'])
+        % disp(['Setting zero for agent ' num2str(agent_id) ' in backward euler'])
         agentStates(agent_id) = 0; % Initialize y_prev for the agent
     end
 

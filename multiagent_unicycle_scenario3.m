@@ -1,18 +1,20 @@
 %% Obstacle Avoidance using single integrator dynamics
 clc; clear; close all
+
 % add paths
-mkdir('animations');
 addpath('./functions');
 addpath('./utils');
 addpath('dynamics-control');
 addpath('./bump_lib');
 
-colors = colororder;
-blue = colors(1,:);
-red = colors(2,:);
-yellow = colors(3,:);
-purple = colors(4,:);
-green = colors(5,:);
+% make dir for animations
+if ~exist('animations', 'dir')
+    mkdir('animations');
+end
+
+% clear persistant values
+clear backwardEuler
+clear forwardEuler
 
 %% Problem Setup
 
@@ -20,24 +22,18 @@ green = colors(5,:);
 num_agents = 3;
 
 % Start and goal positions for agents
-nav_p.x01 = [5; 2; 0];               % Start position for agent 1
-nav_p.xd1 = [25;12.5;0];      % Goal position for agent 1
+nav_p.x01 = [5; 2; 0];     % Start position for agent 1
+nav_p.xd1 = [25;12.5;0];   % Goal position for agent 1
 
-nav_p.x02 = [5; 17.5;0];           % Start position for agent 2
+nav_p.x02 = [5; 17.5;0];   % Start position for agent 2
 nav_p.xd2 = [0;25;0];      % Goal position for agent 2
 
-nav_p.x03 = [20; 10;-pi];             % Start position for agent 3
-nav_p.xd3 = [0;0;0];      % Goal position for agent 3
+nav_p.x03 = [20; 10;-pi];  % Start position for agent 3
+nav_p.xd3 = [0;0;0];       % Goal position for agent 3
             
 % Obstacle parameters
 nav_p.p = 2; % p-norm for obstacle set
-nav_p.rad_from_goal = 4; % Radius for stopping density feedback control
-
-% Density function parameters
-% nav_p.r11 = 1; nav_p.r12 = 3;
-% nav_p.r21 = 1; nav_p.r22 = 3;
-% nav_p.r31 = 0.5; nav_p.r32 = 2;
-% nav_p.r41 = 0.5; nav_p.r42 = 2;
+nav_p.rad_from_goal = 4; % stopping radius
 
 % Density function parameters
 % self raidus is 0.75 so enlareged radius is 1.5
@@ -87,30 +83,34 @@ u_euler = zeros(M, 2, num_agents);
 x_temp = {nav_p.x01, nav_p.x02, nav_p.x03};
 c = x_temp; % Use 'c' to hold current state
 
+disp('----- generating density functions -----')
 % Create function handles for bump functions and gradients
 bumpHandles = createBumpHandles();
 gradDensityHandles = createGradientHandles(nav_p);
 
-%% Simulation loop
-% clear persistant values
-clear backwardEuler
-clear forwardEuler
+disp('----- running simulation loop -----')
+% show progress bar
+w_bar = waitbar(0,'1','Name','running simulation loop...',...
+    'CreateCancelBtn','setappdata(gcbf,''canceling'',1)');
 
-tic
-for iter = 2:M
-    if mod(iter, 1) == 0
-        % disp(['iter:', num2str(iter)]);
-    end
+% Simulation loop
+for iter = 1:M
+    % udpate progress bar
+    waitbar(iter/M,w_bar,sprintf(string(iter)+'/'+string(M)))
 
     % Update states and controls for each vehicle
     for i = 1:num_agents
-        [x_euler(iter, :, i), u_euler(iter, :, i)] = forwardEuler_multiagent_scenario3(nav_p, deltaT, ctrl_multiplier, ...
-            @unicycle_multiagent_scenario3, gradDensityHandles, c{1}, c{2}, c{3}, single_int_p, x_temp{i}, i);
+        [x_euler(iter, :, i), u_euler(iter, :, i)] = forwardEuler_multiagent(nav_p, deltaT, ctrl_multiplier, ...
+            @unicycle_multiagent, gradDensityHandles, c{1}, c{2}, c{3}, single_int_p, x_temp{i}, i);
         x_temp{i} = x_euler(iter, :, i)'; % Update temporary state
         c{i} = x_temp{i}; % Update control state
     end
 end
-toc
+
+% delete progress bar
+F = findall(0,'type','figure','tag','TMWWaitbar');
+delete(F);
+
 %% Plot Time Domain
 fig_titles = {'States', 'Velocity', 'Omega'};
 
@@ -343,8 +343,8 @@ for jj = 1:skip_rate:M
     ylim([-10, 32]);
     
     % Add timestamp
-    timestamp = sprintf('Time: %0.2f s', deltaT * jj);
-    text(0.3, 0.1, timestamp, 'Units', 'normalized', 'FontSize', 12);
+    % timestamp = sprintf('Time: %0.2f s', deltaT * jj);
+    % text(0.3, 0.1, timestamp, 'Units', 'normalized', 'FontSize', 12);
     
     % Write frame to video if saving
     if save_videos

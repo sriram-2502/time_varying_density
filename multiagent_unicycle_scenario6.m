@@ -2,11 +2,19 @@
 clc; clear; close all
 
 % add paths
-mkdir('animations');
 addpath('./functions');
 addpath('./utils');
 addpath('dynamics-control');
 addpath('./bump_lib');
+
+% make dir for animations
+if ~exist('animations', 'dir')
+    mkdir('animations');
+end
+
+% clear persistant values
+clear backwardEuler
+clear forwardEuler
 
 %% Problem Setup
 
@@ -70,6 +78,7 @@ ctrl_multiplier = 10; % Control parameter
 syms x [2,1] real
 [A, A_inv] = transformationMatrix(theta, stretch, 2);
 
+disp('----- generating density functions -----')
 % Create function handles for bump functions and gradients
 bumpHandles = createBumpHandles();
 gradDensityHandles = createGradientHandles(nav_p);
@@ -86,16 +95,15 @@ x_temp = {nav_p.x01, nav_p.x02, nav_p.x03, nav_p.x04, ...
             nav_p.x05, nav_p.x06};
 c = x_temp; % Use 'c' to hold current state
 
-%% Simulation loop
+disp('----- running simulation loop -----')
+% show progress bar
+w_bar = waitbar(0,'1','Name','running simulation loop...',...
+    'CreateCancelBtn','setappdata(gcbf,''canceling'',1)');
 
-% clear persistant values
-clear backwardEuler
-clear forwardEuler
-
+% Simulation loop
 for iter = 1:M
-    if mod(iter, 1) == 0
-        disp(['iter:', num2str(iter)]);
-    end
+    % udpate progress bar
+    waitbar(iter/M,w_bar,sprintf(string(iter)+'/'+string(M)));
 
     % Update states and controls for each vehicle
     for i = 1:num_agents
@@ -105,6 +113,10 @@ for iter = 1:M
         c{i} = x_temp{i}; % Update control state
     end
 end
+
+% delete progress bar
+F = findall(0,'type','figure','tag','TMWWaitbar');
+delete(F);
 
 %% Plot Time Domain
 fig_titles = {'States', 'Velocity', 'Omega'};

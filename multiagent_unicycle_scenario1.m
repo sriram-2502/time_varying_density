@@ -2,27 +2,25 @@
 clc; clear; close all
 
 % add paths
-mkdir('animations');
 addpath('./functions');
 addpath('./utils');
 addpath('dynamics-control');
 addpath('./bump_lib');
 
+% make dir for animations
+if ~exist('animations', 'dir')
+    mkdir('animations');
+end
+
 % clear persistant values
 clear backwardEuler
 clear forwardEuler
-
-colors = colororder;
-blue = colors(1,:);
-red = colors(2,:);
-yellow = colors(3,:);
-purple = colors(4,:);
-green = colors(5,:);
 
 %% Problem Setup
 
 % Environment size
 env_size = 5;
+num_agents = 4;
 
 % Square side length
 L = env_size; % Adjust as needed
@@ -43,7 +41,7 @@ nav_p.xd4 = [L; -L-offset; -3*pi/4];    % Goal position for agent 4
 
 % Obstacle parameters
 nav_p.p = 2; % p-norm for obstacle set
-nav_p.rad_from_goal = 4; % Radius for stopping density feedback control
+nav_p.rad_from_goal = 4; % stopping raidus
 
 % Density function parameters
 nav_p.r11 = 0.5; nav_p.r12 = 2;
@@ -82,31 +80,40 @@ syms x [2,1] real
 [single_int_p, dbl_int_p] = generateStateSpace(deltaT, x);
 
 % Initialize state and control arrays
-x_euler = zeros(M, size(nav_p.x01, 1), 4);
-u_euler = zeros(M, 2, 4);
+x_euler = zeros(M, size(nav_p.x01, 1), num_agents);
+u_euler = zeros(M, 2, num_agents);
 
 % Initialize temporary state variables
 x_temp = {nav_p.x01, nav_p.x02, nav_p.x03, nav_p.x04};
 c = x_temp; % Use 'c' to hold current state
 
+disp('----- generating density functions -----')
 % Create function handles for bump functions and gradients
 bumpHandles = createBumpHandles();
 gradDensityHandles = createGradientHandles(nav_p);
 
+disp('----- running simulation loop -----')
+% show progress bar
+w_bar = waitbar(0,'1','Name','running simulation loop...',...
+    'CreateCancelBtn','setappdata(gcbf,''canceling'',1)');
+
 % Simulation loop
 for iter = 1:M
-    if mod(iter, 1) == 0
-        disp(['iter:', num2str(iter)]);
-    end
+    % udpate progress bar
+    waitbar(iter/M,w_bar,sprintf(string(iter)+'/'+string(M)))
 
     % Update states and controls for each vehicle
-    for i = 1:4
+    for i = 1:num_agents
         [x_euler(iter, :, i), u_euler(iter, :, i)] = forwardEuler_multiagent(nav_p, deltaT, ctrl_multiplier, ...
             @unicycle_multiagent, gradDensityHandles, c{1}, c{2}, c{3}, c{4}, single_int_p, x_temp{i}, i);
         x_temp{i} = x_euler(iter, :, i)'; % Update temporary state
         c{i} = x_temp{i}; % Update control state
     end
 end
+
+% delete progress bar
+F = findall(0,'type','figure','tag','TMWWaitbar');
+delete(F);
 
 %% Plot Time Domain
 fig_titles = {'States', 'Velocity', 'Omega'};

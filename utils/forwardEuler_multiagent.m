@@ -60,7 +60,7 @@ function [x_euler, u_euler, x_dot] = forwardEuler_multiagent(p, deltaT, ctrl_mul
     end         
 
     if(isgoal)
-        disp(['----- Agent ', num2str(agent_number), ' reached goal -----'])
+        % disp(['----- Agent ', num2str(agent_number), ' reached goal -----'])
     end
 
     % Transpose and return variables
