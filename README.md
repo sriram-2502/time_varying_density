@@ -1,7 +1,6 @@
 # Time-varying density functions
 This repo is used to develop code for time-varying density functions
 
-<video width="600" height="400" controls>
-  <source src="animations/plaranRR.mp4" type="video/mp4">
-  Your browser does not support the video tag.
-</video>
+<p align="center">
+  <img src="animations/planarRR.gif" alt="animated" />
+</p>
