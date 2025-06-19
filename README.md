@@ -15,12 +15,12 @@ We exploit the occupancy-based interpretation of density in constructing analyti
 (a) Density function defined on an environment with a circular unsafe set and a point target, (b) Corresponding occupancy measure obtained using trajectories from 100 initial conditions sampled within the initial set.
 
 # Multiagent Systems
-Four agent scenario where two agents are bigger than the other agents
+Four four-agent scenario where two agents are bigger than the other agents
 <p align="center">
   <img src="animations/4_agent_scenario_2.gif" alt="animated" />
 </p>
 
-Six agent scenario where all the agents are the same size
+Six-agent scenario where all the agents are the same size
 <p align="center">
   <img src="animations/6_agent_scenario.gif" alt="animated" />
 </p>
@@ -31,3 +31,14 @@ Safe trajectory tracking of a robotic arm while avoinding obstalces
 <p align="center">
   <img src="animations/planarRR.gif" alt="animated" width="400"/>
 </p>
+
+# Lane tracking
+In this example, the density-based controller is able to account for time-varying obstacles (gray) and track a time-varying target (green). Even though the target passes through the unsafe sets, the density-based controller always finds a safe trajectory 
+Scenario 1:
+<div align="center">
+  <img src="animations/lane_tracking1.gif" width="300" alt="Lane tracking 1" />
+</div>
+Scenario 2:
+<div align="center">
+  <img src="animations/lane_tracking1.gif" width="300" alt="Lane tracking 2" />
+</div>
