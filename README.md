@@ -22,7 +22,9 @@ Full version (Under review)
   year={2024}
 }
 ```
+
 Check out extensions of density functions here: https://github.com/DyCo-AI/density_feedback_control
+
 ---
 
 # Density functions
