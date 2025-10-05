@@ -68,7 +68,7 @@ Scenario 1:
 
 Scenario 2:
 <div align="center">
-  <img src="animations/lane_tracking1.gif" width="300" alt="Lane tracking 2" />
+  <img src="animations/lane_tracking2.gif" width="300" alt="Lane tracking 2" />
 </div>
 
 ## Quadruped Navigation
